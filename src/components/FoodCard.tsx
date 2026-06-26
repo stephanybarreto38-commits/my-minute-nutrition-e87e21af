@@ -20,16 +20,15 @@ const REACTION_EMOJI: Record<string, string> = {
 export default function FoodCard({ food, log, lang, babyMonths, onClick }: Props) {
   const tx = t[lang];
   const tried = log?.tried ?? false;
-  const isNew = food.status === 'new';
   const isAvoid = food.status === 'avoid';
-  const ageAppropriate = food.fromMonths <= babyMonths;
+  const canEatNow = !isAvoid && food.fromMonths <= babyMonths;
   const name = lang === 'es' ? food.nameEs : food.nameEn;
 
-  let cardClass = 'relative bg-gray-50 border border-gray-200 opacity-60';
-  if (ageAppropriate) cardClass = 'relative bg-green-50 border-[1.5px] border-green-500';
-  if (isAvoid) cardClass = 'relative bg-red-50 border border-red-200';
-  if (tried) cardClass = 'relative bg-white border border-gray-200';
-  if (isNew && !tried && !isAvoid) cardClass = 'relative bg-green-50 border-[1.5px] border-green-500';
+  // Priority: tried > avoid > canEatNow > coming soon
+  let cardClass = 'relative bg-gray-100 border border-gray-200 opacity-60'; // coming soon
+  if (canEatNow && !tried) cardClass = 'relative bg-green-50 border-[2px] border-green-500'; // can introduce now
+  if (isAvoid && !tried)   cardClass = 'relative bg-red-50 border border-red-200';            // avoid
+  if (tried)               cardClass = 'relative bg-white border border-gray-200';            // tried
 
   return (
     <button
@@ -52,13 +51,12 @@ export default function FoodCard({ food, log, lang, babyMonths, onClick }: Props
       <span className="text-[9px] mt-0.5 leading-none">
         {tried && log?.reaction
           ? REACTION_EMOJI[log.reaction]
-          : isNew
-          ? <span className="text-green-700 font-medium flex items-center gap-0.5">
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full inline-block" />
-              {tx.food.suggested}
-            </span>
+          : tried
+          ? <span className="text-gray-400">{lang === 'es' ? 'probado' : 'tried'}</span>
           : isAvoid
-          ? <span className="text-red-700">{tx.food.avoidUntil(food.fromMonths)}</span>
+          ? <span className="text-red-500">{tx.food.avoidUntil(food.fromMonths)}</span>
+          : canEatNow
+          ? <span className="text-green-600 font-medium">{lang === 'es' ? '¡ya puede!' : 'ready!'}</span>
           : <span className="text-gray-400">{tx.food.fromMonths(food.fromMonths)}</span>
         }
       </span>

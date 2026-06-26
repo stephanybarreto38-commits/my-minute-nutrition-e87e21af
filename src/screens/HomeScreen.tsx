@@ -156,12 +156,12 @@ export default function HomeScreen({
       </div>
 
       {/* LEGEND */}
-      <div className="flex gap-3 flex-wrap px-4 py-2">
+      <div className="flex gap-x-3 gap-y-1.5 flex-wrap px-4 py-2">
         {[
-          { dot: 'bg-green-600 rounded-full', label: tx.home.legend.tried },
-          { dot: 'bg-green-50 border-[1.5px] border-green-500', label: tx.home.legend.introduce },
-          { dot: 'bg-gray-100 border border-gray-300', label: tx.home.legend.soon },
-          { dot: 'bg-red-50 border border-red-200', label: tx.home.legend.avoid },
+          { dot: 'bg-white border-[1.5px] border-gray-200', check: true, label: lang === 'es' ? '✓ Ya probado' : '✓ Already tried' },
+          { dot: 'bg-green-50 border-[1.5px] border-green-500', label: lang === 'es' ? '¡Ya puede comer!' : 'Ready to eat!' },
+          { dot: 'bg-gray-100 border border-gray-300 opacity-60', label: lang === 'es' ? 'Próximamente' : 'Coming soon' },
+          { dot: 'bg-red-50 border border-red-300', label: lang === 'es' ? 'Evitar por ahora' : 'Avoid for now' },
         ].map(({ dot, label }) => (
           <div key={label} className="flex items-center gap-1.5 text-[10px] text-gray-500">
             <div className={`w-2.5 h-2.5 flex-shrink-0 rounded-sm ${dot}`} />
