@@ -45,6 +45,26 @@ export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onF
           {tx.fridge.info(babyName)}
         </div>
 
+        {triedFoods.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <span className="text-5xl mb-4">🥣</span>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              {lang === 'es' ? 'Aún no hay alimentos probados' : 'No foods tried yet'}
+            </p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {lang === 'es'
+                ? `Cuando marques alimentos como probados en la pantalla principal, aparecerán aquí para crear recetas con lo que ${babyName} ya conoce.`
+                : `When you mark foods as tried on the home screen, they'll appear here to create recipes with what ${babyName} already knows.`}
+            </p>
+            <button
+              onClick={onBack}
+              className="mt-6 bg-green-600 text-white text-sm font-medium px-6 py-2.5 rounded-xl"
+            >
+              {lang === 'es' ? '← Ir a alimentos' : '← Go to foods'}
+            </button>
+          </div>
+        ) : (
+          <>
         <p className="px-4 pt-3 pb-2 text-sm text-gray-500">{tx.fridge.selectLabel}</p>
 
         <div className="grid grid-cols-3 gap-2 px-4 pb-3">
@@ -114,6 +134,8 @@ export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onF
           </>
         )}
         <div className="h-4" />
+          </>
+        )}
       </div>
     </div>
   );
