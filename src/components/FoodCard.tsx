@@ -6,6 +6,7 @@ interface Props {
   food: Food;
   log?: FoodLog;
   lang: Lang;
+  babyMonths: number;
   onClick: () => void;
 }
 
@@ -16,17 +17,19 @@ const REACTION_EMOJI: Record<string, string> = {
   reaction: '⚠️',
 };
 
-export default function FoodCard({ food, log, lang, onClick }: Props) {
+export default function FoodCard({ food, log, lang, babyMonths, onClick }: Props) {
   const tx = t[lang];
   const tried = log?.tried ?? false;
   const isNew = food.status === 'new';
   const isAvoid = food.status === 'avoid';
+  const ageAppropriate = food.fromMonths <= babyMonths;
   const name = lang === 'es' ? food.nameEs : food.nameEn;
 
-  let cardClass = 'relative bg-gray-50 border border-gray-200';
-  if (tried) cardClass = 'relative bg-gray-50 border border-gray-200';
-  if (isNew) cardClass = 'relative bg-green-50 border-[1.5px] border-green-500';
+  let cardClass = 'relative bg-gray-50 border border-gray-200 opacity-60';
+  if (ageAppropriate) cardClass = 'relative bg-green-50 border-[1.5px] border-green-500';
   if (isAvoid) cardClass = 'relative bg-red-50 border border-red-200';
+  if (tried) cardClass = 'relative bg-white border border-gray-200';
+  if (isNew && !tried && !isAvoid) cardClass = 'relative bg-green-50 border-[1.5px] border-green-500';
 
   return (
     <button
