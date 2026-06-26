@@ -6,6 +6,7 @@ import { getFoodById } from './data/foods';
 
 import BottomNav from './components/BottomNav';
 import HomeScreen from './screens/HomeScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 
 // Lazy screens — import inline to keep bundle manageable
 import FoodDetailScreen from './screens/FoodDetailScreen';
@@ -22,7 +23,7 @@ export default function App() {
   const [methodSheetOpen, setMethodSheetOpen] = useState(false);
   const [quickModalFoodId, setQuickModalFoodId] = useState<string | null>(null);
 
-  const handleLangToggle = (lang: Lang) => store.setLang(lang);
+  const handleLangToggle = () => store.setLang(store.lang === 'es' ? 'en' : 'es');
 
   const handleFoodClick = (foodId: string) => {
     setQuickModalFoodId(foodId);
@@ -39,6 +40,14 @@ export default function App() {
       <div className="w-full max-w-sm bg-white flex flex-col min-h-screen md:min-h-0 md:h-[812px] md:rounded-2xl md:border md:border-gray-200 overflow-hidden shadow-sm">
 
         {/* SCREENS */}
+        {store.screen === 'onboarding' && (
+          <OnboardingScreen
+            lang={store.lang}
+            onToggleLang={handleLangToggle}
+            onComplete={store.completeOnboarding}
+          />
+        )}
+
         {store.screen === 'home' && (
           <HomeScreen
             lang={store.lang}
@@ -51,6 +60,7 @@ export default function App() {
             onFoodClick={handleFoodClick}
             onNavigate={store.navigateTo}
             onMethodOpen={() => setMethodSheetOpen(true)}
+            onToggleLang={handleLangToggle}
           />
         )}
 

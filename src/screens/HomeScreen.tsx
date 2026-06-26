@@ -17,6 +17,7 @@ interface Props {
   onFoodClick: (foodId: string) => void;
   onNavigate: (screen: Screen) => void;
   onMethodOpen: () => void;
+  onToggleLang: () => void;
 }
 
 const PREVIEW_COUNT = 3;
@@ -26,7 +27,7 @@ const SUGGESTED_FOOD = FOODS.find(f => f.id === SUGGESTED_FOOD_ID)!;
 
 export default function HomeScreen({
   lang, method, babyName, babyMonths, babyWeek,
-  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen,
+  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen, onToggleLang,
 }: Props) {
   const tx = t[lang];
   const [ageFilter, setAgeFilter] = useState<6 | 8 | 12>(6);
@@ -67,20 +68,10 @@ export default function HomeScreen({
           </p>
         </div>
         {/* Language toggle */}
-        <div className="flex bg-gray-100 rounded-full border border-gray-200 overflow-hidden text-xs">
-          <button
-            onClick={() => {/* handled at App level via prop */}}
-            className={`px-2.5 py-1 ${lang === 'es' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}
-          >
-            ES
-          </button>
-          <button
-            onClick={() => {/* handled at App level via prop */}}
-            className={`px-2.5 py-1 ${lang === 'en' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}
-          >
-            EN
-          </button>
-        </div>
+        <button onClick={onToggleLang} className="flex bg-gray-100 rounded-full border border-gray-200 overflow-hidden text-xs">
+          <span className={`px-2.5 py-1 ${lang === 'es' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}>ES</span>
+          <span className={`px-2.5 py-1 ${lang === 'en' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}>EN</span>
+        </button>
         <button
           onClick={onMethodOpen}
           className="flex items-center gap-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 text-gray-700 flex-shrink-0"
