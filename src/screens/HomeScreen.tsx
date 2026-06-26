@@ -197,6 +197,7 @@ export default function HomeScreen({
                   food={food}
                   log={foodLogs[food.id]}
                   lang={lang}
+                  babyMonths={babyMonths}
                   onClick={() => onFoodClick(food.id)}
                 />
               ))}
