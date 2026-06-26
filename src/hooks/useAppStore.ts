@@ -3,7 +3,7 @@ import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
-export type Screen = 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile';
+export type Screen = 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile';
 
 export interface BabyProfile {
   name: string;
@@ -32,29 +32,14 @@ interface AppState {
 const INITIAL_STATE: AppState = {
   lang: 'es',
   method: 'BLW',
-  screen: 'home',
+  screen: 'onboarding',
   selectedFoodId: null,
   baby: {
-    name: 'Mia',
-    birthDate: '2025-10-05',
+    name: '',
+    birthDate: '',
   },
-  foodLogs: {
-    avocado:  { foodId: 'avocado',  tried: true, reaction: 'loved',  notes: '', date: '2026-06-01' },
-    mango:    { foodId: 'mango',    tried: true, reaction: 'normal', notes: '', date: '2026-06-05' },
-    banana:   { foodId: 'banana',   tried: true, reaction: 'normal', notes: '', date: '2026-06-08' },
-    carrot:   { foodId: 'carrot',   tried: true, reaction: 'loved',  notes: '', date: '2026-06-10' },
-    squash:   { foodId: 'squash',   tried: true, reaction: 'normal', notes: '', date: '2026-06-15' },
-    chicken:  { foodId: 'chicken',  tried: true, reaction: 'loved',  notes: '', date: '2026-06-18' },
-    lentils:  { foodId: 'lentils',  tried: true, reaction: 'normal', notes: '', date: '2026-06-20' },
-  },
-  shoppingList: [
-    { id: 'sl-broc',   nameEs: 'Brócoli',       nameEn: 'Broccoli',       tag: 'baby', checked: false },
-    { id: 'sl-eggs',   nameEs: 'Huevos',         nameEn: 'Eggs',           tag: 'baby', checked: false },
-    { id: 'sl-avoc',   nameEs: 'Aguacate',       nameEn: 'Avocado',        tag: 'baby', checked: true  },
-    { id: 'sl-tom',    nameEs: 'Tomate cherry',  nameEn: 'Cherry tomatoes',tag: 'mom',  checked: false },
-    { id: 'sl-onion',  nameEs: 'Cebolla morada', nameEn: 'Red onion',      tag: 'mom',  checked: false },
-    { id: 'sl-lemon',  nameEs: 'Limón',          nameEn: 'Lemon',          tag: 'mom',  checked: false },
-  ],
+  foodLogs: {},
+  shoppingList: [],
   ageFilter: 6,
 };
 
@@ -143,6 +128,15 @@ export function useAppStore() {
     }));
   }, []);
 
+  const completeOnboarding = useCallback((name: string, birthDate: string, method: FeedingMethod) => {
+    setState(s => ({
+      ...s,
+      baby: { name, birthDate },
+      method,
+      screen: 'home',
+    }));
+  }, []);
+
   // Derived values
   const triedFoodIds = Object.keys(state.foodLogs).filter(
     id => state.foodLogs[id].tried
@@ -169,5 +163,6 @@ export function useAppStore() {
     clearCheckedItems,
     triedFoodIds,
     getBabyAgeMonths,
+    completeOnboarding,
   };
 }
