@@ -36,7 +36,11 @@ export default function FoodDetailScreen({
   const [saved, setSaved] = useState(false);
 
   const name = lang === 'es' ? food.nameEs : food.nameEn;
-  const recipes = getRecipesByFoodId(food.id);
+  const recipes = [...getRecipesByFoodId(food.id)].sort((a, b) => {
+    const aHas = a.methodBadges.includes(method) ? 0 : 1;
+    const bHas = b.methodBadges.includes(method) ? 0 : 1;
+    return aHas - bHas;
+  });
 
   const handleSave = () => {
     onSaveLog(food.id, { tried, reaction, notes, date: new Date().toISOString().split('T')[0] });
