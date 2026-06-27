@@ -5,6 +5,7 @@ import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
+import WeeklyTip from '../components/WeeklyTip';
 
 interface Props {
   lang: Lang;
@@ -135,6 +136,8 @@ export default function HomeScreen({
           </svg>
         </button>
       </div>
+
+      <WeeklyTip lang={lang} />
 
       {/* LEGEND */}
       <div className="flex gap-x-3 gap-y-1.5 flex-wrap px-4 py-2">
