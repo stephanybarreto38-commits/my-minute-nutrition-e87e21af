@@ -3,11 +3,11 @@ import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
-export type Screen = 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile';
+export type Screen = 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes';
 
 export interface BabyProfile {
   name: string;
-  birthDate: string; // ISO string
+  birthDate: string;
 }
 
 export interface ShoppingItem {
@@ -24,7 +24,7 @@ interface AppState {
   screen: Screen;
   selectedFoodId: string | null;
   baby: BabyProfile;
-  foodLogs: Record<string, FoodLog>; // keyed by foodId
+  foodLogs: Record<string, FoodLog>;
   shoppingList: ShoppingItem[];
   ageFilter: 6 | 8 | 12;
 }
@@ -34,10 +34,7 @@ const INITIAL_STATE: AppState = {
   method: 'BLW',
   screen: 'onboarding',
   selectedFoodId: null,
-  baby: {
-    name: '',
-    birthDate: '',
-  },
+  baby: { name: '', birthDate: '' },
   foodLogs: {},
   shoppingList: [],
   ageFilter: 6,
@@ -137,7 +134,6 @@ export function useAppStore() {
     }));
   }, []);
 
-  // Derived values
   const triedFoodIds = Object.keys(state.foodLogs).filter(
     id => state.foodLogs[id].tried
   );
