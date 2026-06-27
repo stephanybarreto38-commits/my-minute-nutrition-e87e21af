@@ -22,7 +22,6 @@ interface Props {
 }
 
 const PREVIEW_COUNT = 3;
-
 const SUGGESTED_FOOD_ID = 'broccoli';
 const SUGGESTED_FOOD = FOODS.find(f => f.id === SUGGESTED_FOOD_ID)!;
 
@@ -56,29 +55,18 @@ export default function HomeScreen({
     <div className="flex flex-col flex-1 overflow-y-auto">
       {/* TOP BAR */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 flex-shrink-0">
-        <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg flex-shrink-0">
-          🐣
-        </div>
+        <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg flex-shrink-0">🐣</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {tx.home.greeting(babyName)}
-          </p>
-          <p className="text-xs text-gray-500">
-            {tx.home.ageLabel(babyMonths, babyWeek)}
-          </p>
+          <p className="text-sm font-medium text-gray-900 truncate">{tx.home.greeting(babyName)}</p>
+          <p className="text-xs text-gray-500">{tx.home.ageLabel(babyMonths, babyWeek)}</p>
         </div>
         <button onClick={onToggleLang} className="flex bg-gray-100 rounded-full border border-gray-200 overflow-hidden text-xs">
           <span className={`px-2.5 py-1 ${lang === 'es' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}>ES</span>
           <span className={`px-2.5 py-1 ${lang === 'en' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}>EN</span>
         </button>
-        <button
-          onClick={onMethodOpen}
-          className="flex items-center gap-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 text-gray-700 flex-shrink-0"
-        >
+        <button onClick={onMethodOpen} className="flex items-center gap-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 text-gray-700 flex-shrink-0">
           {method}
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
         </button>
       </div>
 
@@ -98,14 +86,14 @@ export default function HomeScreen({
             </p>
             <p className="text-[11px] text-green-700">{tx.stage.suggestedSub}</p>
           </div>
-          <button
-            onClick={() => onFoodClick(SUGGESTED_FOOD_ID)}
-            className="bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex-shrink-0"
-          >
+          <button onClick={() => onFoodClick(SUGGESTED_FOOD_ID)} className="bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex-shrink-0">
             {tx.stage.tryBtn}
           </button>
         </div>
       </div>
+
+      {/* WEEKLY TIP */}
+      <WeeklyTip lang={lang} />
 
       {/* PROGRESS */}
       <div className="px-4 mt-3">
@@ -120,13 +108,8 @@ export default function HomeScreen({
 
       {/* COOK CTA */}
       <div className="px-4 mt-2.5">
-        <button
-          onClick={() => onNavigate('fridge')}
-          className="w-full flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl"
-        >
-          <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
-            🧑‍🍳
-          </div>
+        <button onClick={() => onNavigate('fridge')} className="w-full flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+          <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">🧑‍🍳</div>
           <div className="flex-1 text-left min-w-0">
             <p className="text-[13px] font-medium text-gray-900">{tx.home.cookCta}</p>
             <p className="text-[11px] text-gray-500 truncate">{tx.home.cookCtaSub(babyName)}</p>
@@ -136,8 +119,6 @@ export default function HomeScreen({
           </svg>
         </button>
       </div>
-
-      <WeeklyTip lang={lang} />
 
       {/* LEGEND */}
       <div className="flex gap-x-3 gap-y-1.5 flex-wrap px-4 py-2">
@@ -166,42 +147,22 @@ export default function HomeScreen({
         return (
           <div key={cat.id}>
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
-              <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">
-                {catLabel}
-              </span>
-              <span className="text-[10px] text-gray-300">
-                {tx.food.count(triedInCat, allFoods.length)}
-              </span>
+              <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">{catLabel}</span>
+              <span className="text-[10px] text-gray-300">{tx.food.count(triedInCat, allFoods.length)}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 px-4 pb-1">
               {visible.map(food => (
-                <FoodCard
-                  key={food.id}
-                  food={food}
-                  log={foodLogs[food.id]}
-                  lang={lang}
-                  babyMonths={babyMonths}
-                  onClick={() => onFoodClick(food.id)}
-                />
+                <FoodCard key={food.id} food={food} log={foodLogs[food.id]} lang={lang} babyMonths={babyMonths} onClick={() => onFoodClick(food.id)} />
               ))}
             </div>
 
             {allFoods.length > PREVIEW_COUNT && (
-              <button
-                onClick={() => toggleExpand(cat.id)}
-                className="flex items-center justify-center gap-1.5 mx-4 mb-1 w-[calc(100%-32px)] py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500"
-              >
-                <svg
-                  width="14" height="14" viewBox="0 0 14 14" fill="none"
-                  className={`transition-transform ${expanded[cat.id] ? 'rotate-180' : ''}`}
-                >
+              <button onClick={() => toggleExpand(cat.id)} className="flex items-center justify-center gap-1.5 mx-4 mb-1 w-[calc(100%-32px)] py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`transition-transform ${expanded[cat.id] ? 'rotate-180' : ''}`}>
                   <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                {expanded[cat.id]
-                  ? tx.home.seeLess
-                  : tx.home.seeMore(hidden, catLabelPlural)
-                }
+                {expanded[cat.id] ? tx.home.seeLess : tx.home.seeMore(hidden, catLabelPlural)}
               </button>
             )}
           </div>
