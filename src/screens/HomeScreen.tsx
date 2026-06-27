@@ -137,6 +137,8 @@ export default function HomeScreen({
         </button>
       </div>
 
+      <WeeklyTip lang={lang} />
+
       {/* LEGEND */}
       <div className="flex gap-x-3 gap-y-1.5 flex-wrap px-4 py-2">
         {[
