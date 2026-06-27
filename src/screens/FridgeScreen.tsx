@@ -14,7 +14,7 @@ interface Props {
 
 export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onFoodClick }: Props) {
   const tx = t[lang];
-  const [selected, setSelected] = useState<Set<string>>(new Set(['avocado', 'chicken', 'carrot']));
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showResults, setShowResults] = useState(false);
 
   const triedFoods = FOODS.filter(f => triedFoodIds.includes(f.id));
