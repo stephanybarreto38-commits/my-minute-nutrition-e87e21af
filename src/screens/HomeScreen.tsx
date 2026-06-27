@@ -5,6 +5,7 @@ import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
+import WeeklyTip from '../components/WeeklyTip';
 
 interface Props {
   lang: Lang;
