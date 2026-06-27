@@ -62,12 +62,7 @@ export default function MilestoneToast({ lang, babyName, triedCount, lastFoodNam
   const m = getMilestone(triedCount, lang, babyName, lastFoodEmoji, lastFoodName, lastFoodCategory);
 
   return (
-    <div
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-32px)] max-w-sm
-        bg-white border border-green-200 rounded-2xl shadow-lg px-4 py-3
-        flex items-center gap-3 transition-all duration-400
-        ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'}`}
-    >
+    <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-32px)] max-w-sm bg-white border border-green-200 rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3 transition-all duration-400 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'}`}>
       <span className="text-3xl flex-shrink-0">{m.emoji}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 leading-tight">{m.title}</p>
