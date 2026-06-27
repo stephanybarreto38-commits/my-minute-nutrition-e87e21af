@@ -2,15 +2,13 @@ export type Lang = 'es' | 'en';
 
 export const t = {
   es: {
-    // App / nav
     appName: 'MamiNutri',
     nav: {
       home: 'Inicio',
       shopping: 'Compras',
+      worldRecipes: 'Mundo',
       profile: 'Mia',
     },
-
-    // Home screen
     home: {
       greeting: (name: string) => `Hola, ${name}`,
       ageLabel: (months: number, weeks: number) => `${months} meses · Semana ${weeks}`,
@@ -29,8 +27,6 @@ export const t = {
       seeMore: (n: number, label: string) => `Ver ${n} ${label} más`,
       seeLess: 'Ver menos',
     },
-
-    // Stage banner
     stage: {
       pill: (months: string) => `Etapa ${months} meses`,
       title: 'Es momento de introducir nuevos alimentos',
@@ -39,8 +35,6 @@ export const t = {
       suggestedSub: 'Primera vez · Observa posibles reacciones',
       tryBtn: 'Probar',
     },
-
-    // Method
     method: {
       title: 'Elige tu método',
       blwDesc: 'Bebé come solo con sus manos',
@@ -50,8 +44,6 @@ export const t = {
       note: 'Puedes cambiar de método en cualquier momento. Las 3 preparaciones siempre están disponibles.',
       changed: (m: string) => `Método cambiado a ${m}`,
     },
-
-    // Food categories
     category: {
       fruits: 'Frutas',
       vegetables: 'Verduras',
@@ -62,8 +54,6 @@ export const t = {
       proteinsPlural: 'proteínas',
       grainsPlural: 'cereales',
     },
-
-    // Food card labels
     food: {
       tried: 'Probado',
       newThis: 'Nuevo',
@@ -74,8 +64,6 @@ export const t = {
       count: (tried: number, total: number) => `${tried} probados · ${total} total`,
       addToList: 'Agregar a lista de compras',
     },
-
-    // Food detail
     detail: {
       backBtn: 'Inicio',
       chokingRisk: 'Riesgo atragantamiento #',
@@ -89,8 +77,6 @@ export const t = {
       adultVersion: 'Versión adulto',
       addAdultIngredients: 'Agregar ingredientes adulto',
     },
-
-    // Methods preparation
     prep: {
       blw: {
         step1: 'Vapor 8 min hasta que ablande pero no se deshaga',
@@ -109,8 +95,6 @@ export const t = {
         step3: 'Después de 9m: dejar con grumos para avanzar en textura',
       },
     },
-
-    // Log / registro
     log: {
       alreadyTried: 'Ya lo probó',
       firstTime: 'Primera vez ofrecida',
@@ -123,38 +107,30 @@ export const t = {
       notesPlaceholder: 'Ej: le costó al principio pero después le gustó...',
       save: 'Guardar registro',
     },
-
-    // Quick modal
     modal: {
-      firstTime: 'Primera vez hoy',
-      howWasIt: '¿Cómo le fue?',
-      cancel: 'Cancelar',
-      seePrep: 'Ver preparación',
+      firstTime: '¡Primera vez! 🌱',
+      howWasIt: '¿Cómo le fue con este alimento?',
+      cancel: 'Ahora no',
+      seePrep: 'Ver cómo prepararlo',
     },
-
-    // Shopping list
     shopping: {
       title: 'Lista de compras',
-      clear: 'Limpiar',
+      clear: 'Limpiar marcados',
       forBaby: 'Para bebé',
       forMom: 'Para mamá',
       baby: 'bebé',
       mom: 'mamá',
       added: 'Agregado a lista de compras',
-      empty: 'Lista vacía — agrega alimentos desde las recetas',
+      empty: 'Aquí irán los ingredientes para cocinar con tu bebé 🛒',
     },
-
-    // Fridge / what to cook
     fridge: {
       title: '¿Qué cocino hoy?',
-      info: (name: string) => `Solo muestra alimentos que ${name} ya probó — sin sorpresas para su barriguita.`,
-      selectLabel: 'Selecciona lo que tienes en casa:',
-      showRecipes: 'Ver recetas',
-      resultsLabel: 'Recetas con lo que tienes',
-      noResults: 'Selecciona más ingredientes para ver recetas.',
+      info: (name: string) => `Solo verás alimentos que ${name} ya probó — sin sorpresas para su barriguita 💚`,
+      selectLabel: '¿Qué tienes en casa hoy?',
+      showRecipes: 'Ver qué puedo preparar',
+      resultsLabel: 'Ideas para cocinar hoy',
+      noResults: 'Prueba seleccionando más alimentos — seguro encontramos algo rico 🍳',
     },
-
-    // Profile
     profile: {
       title: (name: string) => `Perfil de ${name}`,
       bornLabel: (date: string) => `Nacida ${date}`,
@@ -166,15 +142,14 @@ export const t = {
       active: 'Activo',
     },
   },
-
   en: {
     appName: 'MamiNutri',
     nav: {
       home: 'Home',
       shopping: 'Shopping',
+      worldRecipes: 'World',
       profile: 'Mia',
     },
-
     home: {
       greeting: (name: string) => `Hi, ${name}`,
       ageLabel: (months: number, weeks: number) => `${months} months · Week ${weeks}`,
@@ -193,7 +168,6 @@ export const t = {
       seeMore: (n: number, label: string) => `See ${n} more ${label}`,
       seeLess: 'See less',
     },
-
     stage: {
       pill: (months: string) => `Stage ${months} months`,
       title: 'Time to introduce new foods',
@@ -202,7 +176,6 @@ export const t = {
       suggestedSub: 'First time · Watch for reactions',
       tryBtn: 'Try it',
     },
-
     method: {
       title: 'Choose your method',
       blwDesc: 'Baby self-feeds with finger foods',
@@ -212,7 +185,6 @@ export const t = {
       note: 'You can change method anytime. All 3 preparation options are always shown.',
       changed: (m: string) => `Method changed to ${m}`,
     },
-
     category: {
       fruits: 'Fruits',
       vegetables: 'Vegetables',
@@ -223,7 +195,6 @@ export const t = {
       proteinsPlural: 'proteins',
       grainsPlural: 'grains',
     },
-
     food: {
       tried: 'Tried',
       newThis: 'New',
@@ -234,7 +205,6 @@ export const t = {
       count: (tried: number, total: number) => `${tried} tried · ${total} total`,
       addToList: 'Add to shopping list',
     },
-
     detail: {
       backBtn: 'Back',
       chokingRisk: 'Choking risk #',
@@ -248,7 +218,6 @@ export const t = {
       adultVersion: 'Adult version',
       addAdultIngredients: 'Add adult ingredients',
     },
-
     prep: {
       blw: {
         step1: 'Steam 8 min until soft but not mushy',
@@ -267,7 +236,6 @@ export const t = {
         step3: 'After 9m: leave lumpy to build texture tolerance',
       },
     },
-
     log: {
       alreadyTried: 'Already tried',
       firstTime: 'First time offered',
@@ -280,34 +248,30 @@ export const t = {
       notesPlaceholder: 'E.g., hard at first but then liked it...',
       save: 'Save log',
     },
-
     modal: {
-      firstTime: 'First time today',
-      howWasIt: 'How did it go?',
-      cancel: 'Cancel',
-      seePrep: 'See preparation',
+      firstTime: 'First time! 🌱',
+      howWasIt: 'How did it go with this food?',
+      cancel: 'Not now',
+      seePrep: 'See how to prepare it',
     },
-
     shopping: {
       title: 'Shopping list',
-      clear: 'Clear done',
+      clear: 'Clear checked',
       forBaby: 'For baby',
       forMom: 'For mom',
       baby: 'baby',
       mom: 'mom',
       added: 'Added to shopping list',
-      empty: 'List is empty — add foods from recipes',
+      empty: "Here you'll find ingredients to cook with your baby 🛒",
     },
-
     fridge: {
       title: 'What should I cook today?',
-      info: (name: string) => `Only shows foods ${name} has already tried — no surprises for her tummy.`,
-      selectLabel: 'Select what you have at home:',
-      showRecipes: 'Show recipes',
-      resultsLabel: 'Recipes with what you have',
-      noResults: 'Select more ingredients to see recipes.',
+      info: (name: string) => `Only foods ${name} has already tried — no surprises for her tummy 💚`,
+      selectLabel: 'What do you have at home today?',
+      showRecipes: 'See what I can make',
+      resultsLabel: 'Ideas for today',
+      noResults: "Try selecting more foods — we'll find something yummy 🍳",
     },
-
     profile: {
       title: (name: string) => `${name}'s profile`,
       bornLabel: (date: string) => `Born ${date}`,
