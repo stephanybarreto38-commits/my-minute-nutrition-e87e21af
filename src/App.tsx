@@ -24,7 +24,9 @@ export default function App() {
   const handleFoodClick = (foodId: string) => setQuickModalFoodId(foodId);
 
   const babyMonths = store.getBabyAgeMonths();
-  const babyWeek = 10;
+  const babyWeek = store.baby.birthDate
+    ? Math.max(0, Math.floor((Date.now() - new Date(store.baby.birthDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
+    : 0;
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
 
   return (
