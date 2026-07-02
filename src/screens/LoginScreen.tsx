@@ -80,7 +80,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
 
       <div className="w-full max-w-sm text-center mb-6">
         <div className="text-5xl mb-2">🥑</div>
-        <h1 className="text-2xl font-bold text-gray-900">MamiNutri</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Little Meal</h1>
         <p className="text-sm text-gray-500 mt-1">
           {isEs ? 'Alimentación complementaria para tu bebé' : 'Complementary feeding for your baby'}
         </p>
