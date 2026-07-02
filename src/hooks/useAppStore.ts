@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
-export type Screen = 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes';
+export type Screen = 'login' | 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes';
 
 export interface BabyProfile {
   name: string;
@@ -27,41 +27,46 @@ interface AppState {
   foodLogs: Record<string, FoodLog>;
   shoppingList: ShoppingItem[];
   ageFilter: 6 | 8 | 12;
+  userEmail: string | null;
 }
 
-const INITIAL_STATE: AppState = {
-  lang: 'es',
-  method: 'BLW',
-  screen: 'onboarding',
-  selectedFoodId: null,
-  baby: { name: '', birthDate: '' },
-  foodLogs: {},
-  shoppingList: [],
-  ageFilter: 6,
+const SESSION_KEY = 'maminu_session';
+
+const getInitialState = (): AppState => {
+  const email = typeof window !== 'undefined' ? localStorage.getItem(SESSION_KEY) : null;
+  return {
+    lang: 'es',
+    method: 'BLW',
+    screen: email ? 'onboarding' : 'login',
+    selectedFoodId: null,
+    baby: { name: '', birthDate: '' },
+    foodLogs: {},
+    shoppingList: [],
+    ageFilter: 6,
+    userEmail: email,
+  };
 };
 
 export function useAppStore() {
-  const [state, setState] = useState<AppState>(INITIAL_STATE);
+  const [state, setState] = useState<AppState>(getInitialState);
 
-  const setLang = useCallback((lang: Lang) => {
-    setState(s => ({ ...s, lang }));
+  useEffect(() => {
+    const onStorage = () => {
+      const email = localStorage.getItem(SESSION_KEY);
+      setState(s => ({ ...s, userEmail: email, screen: email ? s.screen : 'login' }));
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const setMethod = useCallback((method: FeedingMethod) => {
-    setState(s => ({ ...s, method }));
-  }, []);
+  const setLang = useCallback((lang: Lang) => setState(s => ({ ...s, lang })), []);
+  const setMethod = useCallback((method: FeedingMethod) => setState(s => ({ ...s, method })), []);
 
   const navigateTo = useCallback((screen: Screen, foodId?: string) => {
-    setState(s => ({
-      ...s,
-      screen,
-      selectedFoodId: foodId ?? s.selectedFoodId,
-    }));
+    setState(s => ({ ...s, screen, selectedFoodId: foodId ?? s.selectedFoodId }));
   }, []);
 
-  const setAgeFilter = useCallback((age: 6 | 8 | 12) => {
-    setState(s => ({ ...s, ageFilter: age }));
-  }, []);
+  const setAgeFilter = useCallback((age: 6 | 8 | 12) => setState(s => ({ ...s, ageFilter: age })), []);
 
   const saveLog = useCallback((foodId: string, log: Partial<FoodLog>) => {
     setState(s => ({
@@ -100,11 +105,7 @@ export function useAppStore() {
       const existing = new Set(s.shoppingList.map(i => i.nameEs));
       const newItems: ShoppingItem[] = items
         .filter(i => !existing.has(i.nameEs))
-        .map(i => ({
-          ...i,
-          id: `sl-${Date.now()}-${Math.random()}`,
-          checked: false,
-        }));
+        .map(i => ({ ...i, id: `sl-${Date.now()}-${Math.random()}`, checked: false }));
       return { ...s, shoppingList: [...s.shoppingList, ...newItems] };
     });
   }, []);
@@ -119,31 +120,30 @@ export function useAppStore() {
   }, []);
 
   const clearCheckedItems = useCallback(() => {
-    setState(s => ({
-      ...s,
-      shoppingList: s.shoppingList.filter(i => !i.checked),
-    }));
+    setState(s => ({ ...s, shoppingList: s.shoppingList.filter(i => !i.checked) }));
   }, []);
 
   const completeOnboarding = useCallback((name: string, birthDate: string, method: FeedingMethod) => {
-    setState(s => ({
-      ...s,
-      baby: { name, birthDate },
-      method,
-      screen: 'home',
-    }));
+    setState(s => ({ ...s, baby: { name, birthDate }, method, screen: 'home' }));
   }, []);
 
-  const triedFoodIds = Object.keys(state.foodLogs).filter(
-    id => state.foodLogs[id].tried
-  );
+  const loginUser = useCallback((email: string) => {
+    localStorage.setItem(SESSION_KEY, email);
+    setState(s => ({ ...s, userEmail: email, screen: 'onboarding' }));
+  }, []);
+
+  const logoutUser = useCallback(() => {
+    localStorage.removeItem(SESSION_KEY);
+    setState(s => ({ ...s, userEmail: null, screen: 'login' }));
+  }, []);
+
+  const triedFoodIds = Object.keys(state.foodLogs).filter(id => state.foodLogs[id].tried);
 
   const getBabyAgeMonths = () => {
+    if (!state.baby.birthDate) return 0;
     const birth = new Date(state.baby.birthDate);
     const now = new Date();
-    const months = (now.getFullYear() - birth.getFullYear()) * 12
-      + now.getMonth() - birth.getMonth();
-    return months;
+    return (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
   };
 
   return {
@@ -160,5 +160,7 @@ export function useAppStore() {
     triedFoodIds,
     getBabyAgeMonths,
     completeOnboarding,
+    loginUser,
+    logoutUser,
   };
 }
