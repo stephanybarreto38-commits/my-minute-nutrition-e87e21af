@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import LoginScreen from './screens/LoginScreen';
 import { useAppStore } from './hooks/useAppStore';
 import { t } from './data/translations';
 import { getFoodById } from './data/foods';
