@@ -32,7 +32,7 @@ export default function App() {
       <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
         <aside className="hidden md:flex flex-col w-56 bg-green-700 text-white flex-shrink-0">
           <div className="px-5 pt-7 pb-6 border-b border-green-600">
-            <p className="text-xl font-semibold tracking-tight">🥑 MamiNutri</p>
+            <p className="text-xl font-semibold tracking-tight">🥑 Little Meal</p>
             <p className="text-[11px] text-green-300 mt-0.5">
               {store.baby.name ? `Hola, ${store.baby.name} 👶` : 'Alimentación saludable'}
             </p>
