@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import LoginScreen from './screens/LoginScreen';
 import { useAppStore } from './hooks/useAppStore';
 import { t } from './data/translations';
 import { getFoodById } from './data/foods';
@@ -20,8 +21,28 @@ export default function App() {
   const [methodSheetOpen, setMethodSheetOpen] = useState(false);
   const [quickModalFoodId, setQuickModalFoodId] = useState<string | null>(null);
   const [milestone, setMilestone] = useState<{ foodId: string } | null>(null);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('maminu_session') : null
+  );
+
+  useEffect(() => {
+    const onStorage = () => setSessionEmail(localStorage.getItem('maminu_session'));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const handleLangToggle = () => store.setLang(store.lang === 'es' ? 'en' : 'es');
+
+  if (!sessionEmail) {
+    return (
+      <LoginScreen
+        lang={store.lang}
+        onToggleLang={handleLangToggle}
+        onLogin={(email) => setSessionEmail(email)}
+      />
+    );
+  }
+
   const babyMonths = store.getBabyAgeMonths();
   const babyWeek = 10;
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
