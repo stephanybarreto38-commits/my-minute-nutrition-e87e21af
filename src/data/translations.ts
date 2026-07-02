@@ -2,7 +2,7 @@ export type Lang = 'es' | 'en';
 
 export const t = {
   es: {
-    appName: 'MamiNutri',
+    appName: 'Little Meal',
     nav: {
       home: 'Inicio',
       shopping: 'Compras',
@@ -143,7 +143,7 @@ export const t = {
     },
   },
   en: {
-    appName: 'MamiNutri',
+    appName: 'Little Meal',
     nav: {
       home: 'Home',
       shopping: 'Shopping',
