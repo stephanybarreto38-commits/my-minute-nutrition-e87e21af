@@ -23,6 +23,7 @@ const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
 
 export default function ProfileScreen({
   lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange,
+  isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang,
 }: Props) {
   const tx = t[lang];
 
