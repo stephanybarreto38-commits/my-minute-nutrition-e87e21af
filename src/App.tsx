@@ -181,6 +181,11 @@ export default function App() {
               foodLogs={store.foodLogs}
               totalFoods={120}
               onMethodChange={store.setMethod}
+              isAdmin={store.isAdmin}
+              userEmail={store.userEmail}
+              onOpenAdmin={() => store.navigateTo('admin')}
+              onLogout={store.logoutUser}
+              onToggleLang={handleLangToggle}
             />
           )}
           {store.screen !== 'food-detail' && store.screen !== 'fridge' && store.screen !== 'login' && store.screen !== 'onboarding' && (
