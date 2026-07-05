@@ -1,12 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
 export type Screen = 'login' | 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes' | 'admin';
-
-const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
-const SESSION_KEY = 'maminu_session';
 
 export interface BabyProfile {
   name: string;
@@ -31,10 +29,9 @@ interface AppState {
   shoppingList: ShoppingItem[];
   ageFilter: 6 | 8 | 12;
   userEmail: string | null;
+  isAdmin: boolean;
 }
 
-// SSR-safe defaults: same on server and first client render. We hydrate
-// from localStorage in useEffect after mount to avoid hydration mismatches.
 const INITIAL_STATE: AppState = {
   lang: 'es',
   method: 'BLW',
@@ -45,37 +42,50 @@ const INITIAL_STATE: AppState = {
   shoppingList: [],
   ageFilter: 6,
   userEmail: null,
+  isAdmin: false,
 };
 
 export function useAppStore() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(SESSION_KEY);
-    if (saved) {
-      setState(s => ({ ...s, userEmail: saved, screen: s.screen === 'login' ? 'onboarding' : s.screen }));
-    }
-  }, []);
-
-  const setLang = useCallback((lang: Lang) => {
-    setState(s => ({ ...s, lang }));
-  }, []);
-
-  const setMethod = useCallback((method: FeedingMethod) => {
-    setState(s => ({ ...s, method }));
-  }, []);
-
-  const navigateTo = useCallback((screen: Screen, foodId?: string) => {
+  const hydrate = useCallback(async (email: string, userId: string) => {
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    const isAdmin = (roles ?? []).some(r => r.role === 'admin');
     setState(s => ({
       ...s,
-      screen,
-      selectedFoodId: foodId ?? s.selectedFoodId,
+      userEmail: email,
+      isAdmin,
+      screen: s.screen === 'login' ? 'onboarding' : s.screen,
     }));
   }, []);
 
-  const setAgeFilter = useCallback((age: 6 | 8 | 12) => {
-    setState(s => ({ ...s, ageFilter: age }));
+  useEffect(() => {
+    // Listen first, then get current session
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setState(s => ({ ...s, userEmail: null, isAdmin: false, screen: 'login' }));
+        return;
+      }
+      const u = session.user;
+      if (u.email) void hydrate(u.email, u.id);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user?.email) {
+        void hydrate(data.session.user.email, data.session.user.id);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [hydrate]);
+
+  const setLang = useCallback((lang: Lang) => setState(s => ({ ...s, lang })), []);
+  const setMethod = useCallback((method: FeedingMethod) => setState(s => ({ ...s, method })), []);
+  const navigateTo = useCallback((screen: Screen, foodId?: string) => {
+    setState(s => ({ ...s, screen, selectedFoodId: foodId ?? s.selectedFoodId }));
   }, []);
+  const setAgeFilter = useCallback((age: 6 | 8 | 12) => setState(s => ({ ...s, ageFilter: age })), []);
 
   const saveLog = useCallback((foodId: string, log: Partial<FoodLog>) => {
     setState(s => ({
@@ -114,11 +124,7 @@ export function useAppStore() {
       const existing = new Set(s.shoppingList.map(i => i.nameEs));
       const newItems: ShoppingItem[] = items
         .filter(i => !existing.has(i.nameEs))
-        .map(i => ({
-          ...i,
-          id: `sl-${Date.now()}-${Math.random()}`,
-          checked: false,
-        }));
+        .map(i => ({ ...i, id: `sl-${Date.now()}-${Math.random()}`, checked: false }));
       return { ...s, shoppingList: [...s.shoppingList, ...newItems] };
     });
   }, []);
@@ -133,35 +139,24 @@ export function useAppStore() {
   }, []);
 
   const clearCheckedItems = useCallback(() => {
-    setState(s => ({
-      ...s,
-      shoppingList: s.shoppingList.filter(i => !i.checked),
-    }));
+    setState(s => ({ ...s, shoppingList: s.shoppingList.filter(i => !i.checked) }));
   }, []);
 
   const completeOnboarding = useCallback((name: string, birthDate: string, method: FeedingMethod) => {
-    setState(s => ({
-      ...s,
-      baby: { name, birthDate },
-      method,
-      screen: 'home',
-    }));
+    setState(s => ({ ...s, baby: { name, birthDate }, method, screen: 'home' }));
   }, []);
 
   const loginUser = useCallback((email: string) => {
-    localStorage.setItem(SESSION_KEY, email);
-    setState(s => ({
-      ...s,
-      userEmail: email,
-      screen: 'onboarding',
-    }));
+    // Session listener will hydrate isAdmin + set screen to onboarding
+    setState(s => ({ ...s, userEmail: email, screen: 'onboarding' }));
   }, []);
 
-  const logoutUser = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY);
+  const logoutUser = useCallback(async () => {
+    await supabase.auth.signOut();
     setState(s => ({
       ...s,
       userEmail: null,
+      isAdmin: false,
       screen: 'login',
       baby: { name: '', birthDate: '' },
       foodLogs: {},
@@ -198,6 +193,5 @@ export function useAppStore() {
     completeOnboarding,
     loginUser,
     logoutUser,
-    isAdmin: state.userEmail === ADMIN_EMAIL,
   };
 }
