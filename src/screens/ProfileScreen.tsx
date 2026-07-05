@@ -12,6 +12,11 @@ interface Props {
   foodLogs: Record<string, FoodLog>;
   totalFoods: number;
   onMethodChange: (m: FeedingMethod) => void;
+  isAdmin?: boolean;
+  userEmail?: string | null;
+  onOpenAdmin?: () => void;
+  onLogout?: () => void;
+  onToggleLang?: () => void;
 }
 
 const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
