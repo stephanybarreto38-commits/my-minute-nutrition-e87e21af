@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import type { Lang } from '../data/translations';
 
 interface Props {
@@ -5,66 +7,45 @@ interface Props {
   onBack: () => void;
 }
 
-interface UserRecord {
-  password: string;
+interface ProfileRow {
+  id: string;
+  email: string;
   approved: boolean;
-  createdAt: string;
+  created_at: string;
 }
 
 const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
-const STORAGE_KEY = 'maminu_users';
-
-function getUsers(): Record<string, UserRecord> {
-  const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, unknown>;
-  const out: Record<string, UserRecord> = {};
-  for (const [email, val] of Object.entries(raw)) {
-    if (typeof val === 'string') {
-      // legacy shape: just a password string
-      out[email] = { password: val, approved: email === ADMIN_EMAIL, createdAt: '—' };
-    } else if (val && typeof val === 'object') {
-      const v = val as Partial<UserRecord>;
-      out[email] = {
-        password: v.password ?? '',
-        approved: v.approved ?? false,
-        createdAt: v.createdAt ?? '—',
-      };
-    }
-  }
-  return out;
-}
-
-function saveUsers(users: Record<string, UserRecord>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-}
 
 export default function AdminScreen({ lang, onBack }: Props) {
   const isEs = lang === 'es';
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const users = getUsers();
-  const emails = Object.keys(users).filter(e => e !== ADMIN_EMAIL);
-  const pending = emails.filter(e => !users[e].approved);
-  const approved = emails.filter(e => users[e].approved);
-
-  const approve = (email: string) => {
-    const updated = getUsers();
-    updated[email].approved = true;
-    saveUsers(updated);
-    window.location.reload();
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, approved, created_at')
+      .order('created_at', { ascending: false });
+    if (!error && data) setProfiles(data as ProfileRow[]);
+    setLoading(false);
   };
 
-  const revoke = (email: string) => {
-    const updated = getUsers();
-    updated[email].approved = false;
-    saveUsers(updated);
-    window.location.reload();
+  useEffect(() => { load(); }, []);
+
+  const setApproved = async (id: string, approved: boolean) => {
+    await supabase.from('profiles').update({ approved }).eq('id', id);
+    await load();
   };
 
-  const remove = (email: string) => {
-    const updated = getUsers();
-    delete updated[email];
-    saveUsers(updated);
-    window.location.reload();
-  };
+  const others = profiles.filter(p => p.email.toLowerCase() !== ADMIN_EMAIL);
+  const pending = others.filter(p => !p.approved);
+  const approved = others.filter(p => p.approved);
+
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleDateString(isEs ? 'es-CO' : 'en-US', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,56 +71,54 @@ export default function AdminScreen({ lang, onBack }: Props) {
           </div>
         </div>
 
-        {pending.length > 0 && (
+        {loading && (
+          <p className="text-sm text-gray-500 text-center py-4">
+            {isEs ? 'Cargando...' : 'Loading...'}
+          </p>
+        )}
+
+        {!loading && pending.length > 0 && (
           <section>
             <h2 className="text-sm font-semibold text-gray-800 mb-2">
               {isEs ? '⏳ Esperando aprobación' : '⏳ Awaiting approval'}
             </h2>
             <ul className="space-y-2">
-              {pending.map(email => (
-                <li key={email} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center justify-between gap-3">
+              {pending.map(p => (
+                <li key={p.id} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{email}</p>
+                    <p className="text-sm text-gray-900 truncate">{p.email}</p>
                     <p className="text-[11px] text-gray-500">
-                      {isEs ? 'Registrado el ' : 'Registered '}{users[email].createdAt}
+                      {isEs ? 'Registrado el ' : 'Registered '}{fmt(p.created_at)}
                     </p>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => approve(email)}
-                      className="text-[11px] bg-green-600 text-white px-2.5 py-1 rounded-lg font-medium"
-                    >
-                      {isEs ? 'Aprobar' : 'Approve'}
-                    </button>
-                    <button
-                      onClick={() => remove(email)}
-                      className="text-[11px] bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-medium"
-                    >
-                      {isEs ? 'Eliminar' : 'Delete'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setApproved(p.id, true)}
+                    className="text-[11px] bg-green-600 text-white px-2.5 py-1 rounded-lg font-medium"
+                  >
+                    {isEs ? 'Aprobar' : 'Approve'}
+                  </button>
                 </li>
               ))}
             </ul>
           </section>
         )}
 
-        {approved.length > 0 && (
+        {!loading && approved.length > 0 && (
           <section>
             <h2 className="text-sm font-semibold text-gray-800 mb-2">
               {isEs ? '✅ Usuarios activos' : '✅ Active users'}
             </h2>
             <ul className="space-y-2">
-              {approved.map(email => (
-                <li key={email} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center justify-between gap-3">
+              {approved.map(p => (
+                <li key={p.id} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{email}</p>
+                    <p className="text-sm text-gray-900 truncate">{p.email}</p>
                     <p className="text-[11px] text-gray-500">
-                      {isEs ? 'Registrado el ' : 'Registered '}{users[email].createdAt}
+                      {isEs ? 'Registrado el ' : 'Registered '}{fmt(p.created_at)}
                     </p>
                   </div>
                   <button
-                    onClick={() => revoke(email)}
+                    onClick={() => setApproved(p.id, false)}
                     className="text-[11px] bg-gray-100 text-gray-500 px-2.5 py-1 rounded-lg font-medium flex-shrink-0"
                   >
                     {isEs ? 'Revocar' : 'Revoke'}
@@ -150,7 +129,7 @@ export default function AdminScreen({ lang, onBack }: Props) {
           </section>
         )}
 
-        {emails.length === 0 && (
+        {!loading && others.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
             <p className="text-4xl mb-2">👋</p>
             <p className="text-sm text-gray-500">
