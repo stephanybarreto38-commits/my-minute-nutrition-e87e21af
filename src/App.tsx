@@ -133,6 +133,9 @@ export default function App() {
               onMethodChange={store.setMethod}
             />
           )}
+          {store.screen === 'admin' && (
+            <AdminScreen lang={store.lang} onBack={() => store.navigateTo('home')} />
+          )}
           {store.screen !== 'food-detail' && store.screen !== 'fridge' && store.screen !== 'login' && store.screen !== 'onboarding' && (
             <div className="md:hidden">
               <BottomNav
