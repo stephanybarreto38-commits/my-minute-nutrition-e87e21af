@@ -13,6 +13,9 @@ import ProfileScreen from './screens/ProfileScreen';
 import MethodSheet from './components/MethodSheet';
 import FoodQuickModal from './components/FoodQuickModal';
 import WorldRecipesScreen from './screens/WorldRecipesScreen';
+import AdminScreen from './screens/AdminScreen';
+
+const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
 
 export default function App() {
   const store = useAppStore();
