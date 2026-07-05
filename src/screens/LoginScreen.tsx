@@ -10,6 +10,28 @@ interface Props {
 
 type Mode = 'login' | 'register';
 
+const ensureAccessRequest = async (userId: string, userEmail: string) => {
+  const normalizedEmail = userEmail.trim().toLowerCase();
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert(
+      { id: userId, email: normalizedEmail, approved: false },
+      { onConflict: 'id', ignoreDuplicates: true },
+    );
+
+  if (profileError) throw profileError;
+
+  const { error: roleError } = await supabase
+    .from('user_roles')
+    .upsert(
+      { user_id: userId, role: 'user' },
+      { onConflict: 'user_id,role', ignoreDuplicates: true },
+    );
+
+  if (roleError) throw roleError;
+};
+
 export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
@@ -42,9 +64,11 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
     setLoading(true);
 
     try {
+      const normalizedEmail = email.trim().toLowerCase();
+
       if (mode === 'register') {
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
+          email: normalizedEmail,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
@@ -56,6 +80,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
         // Check if approved (admin auto-approves)
         const userId = data.user?.id;
         if (userId) {
+          await ensureAccessRequest(userId, normalizedEmail);
           const { data: profile } = await supabase
             .from('profiles')
             .select('approved')
@@ -72,7 +97,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
         setLoading(false);
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
+          email: normalizedEmail,
           password,
         });
         if (signInError) {
@@ -81,6 +106,9 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
           return;
         }
         const userId = data.user?.id;
+        if (userId) {
+          await ensureAccessRequest(userId, normalizedEmail);
+        }
         const { data: profile } = await supabase
           .from('profiles')
           .select('approved')
