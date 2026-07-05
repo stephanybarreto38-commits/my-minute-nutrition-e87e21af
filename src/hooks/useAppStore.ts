@@ -3,7 +3,7 @@ import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
-export type Screen = 'login' | 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes';
+export type Screen = 'login' | 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes' | 'admin';
 
 export interface BabyProfile {
   name: string;

@@ -13,6 +13,9 @@ import ProfileScreen from './screens/ProfileScreen';
 import MethodSheet from './components/MethodSheet';
 import FoodQuickModal from './components/FoodQuickModal';
 import WorldRecipesScreen from './screens/WorldRecipesScreen';
+import AdminScreen from './screens/AdminScreen';
+
+const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
 
 export default function App() {
   const store = useAppStore();
@@ -40,12 +43,14 @@ export default function App() {
             </p>
           </div>
           {store.screen !== 'onboarding' && store.screen !== 'login' && (() => {
+            const isAdmin = store.userEmail === ADMIN_EMAIL;
             const NAV = [
               { screen: 'home' as const,         emoji: '🏠', label: store.lang === 'es' ? 'Inicio' : 'Home' },
               { screen: 'world-recipes' as const, emoji: '🌍', label: store.lang === 'es' ? 'Mundo' : 'World' },
               { screen: 'fridge' as const,        emoji: '🧊', label: store.lang === 'es' ? 'Nevera' : 'Fridge' },
               { screen: 'shopping' as const,      emoji: '🛒', label: store.lang === 'es' ? 'Compras' : 'Shopping' },
               { screen: 'profile' as const,       emoji: '👤', label: store.lang === 'es' ? 'Perfil' : 'Profile' },
+              ...(isAdmin ? [{ screen: 'admin' as const, emoji: '⚙️', label: store.lang === 'es' ? 'Admin' : 'Admin' }] : []),
             ];
             return (
               <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
@@ -127,6 +132,9 @@ export default function App() {
               method={store.method} foodLogs={store.foodLogs} totalFoods={120}
               onMethodChange={store.setMethod}
             />
+          )}
+          {store.screen === 'admin' && (
+            <AdminScreen lang={store.lang} onBack={() => store.navigateTo('home')} />
           )}
           {store.screen !== 'food-detail' && store.screen !== 'fridge' && store.screen !== 'login' && store.screen !== 'onboarding' && (
             <div className="md:hidden">

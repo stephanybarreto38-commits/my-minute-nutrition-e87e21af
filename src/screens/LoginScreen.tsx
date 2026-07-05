@@ -41,7 +41,18 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
 
     setTimeout(() => {
       const STORAGE_KEY = 'maminu_users';
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, string>;
+      const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
+      type UserRecord = { password: string; approved: boolean; createdAt: string };
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, unknown>;
+      const stored: Record<string, UserRecord> = {};
+      for (const [em, val] of Object.entries(raw)) {
+        if (typeof val === 'string') {
+          stored[em] = { password: val, approved: em === ADMIN_EMAIL, createdAt: '—' };
+        } else if (val && typeof val === 'object') {
+          const v = val as Partial<UserRecord>;
+          stored[em] = { password: v.password ?? '', approved: v.approved ?? false, createdAt: v.createdAt ?? '—' };
+        }
+      }
 
       if (mode === 'register') {
         if (stored[email]) {
@@ -49,16 +60,36 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
           setLoading(false);
           return;
         }
-        stored[email] = password;
+        stored[email] = {
+          password,
+          approved: email === ADMIN_EMAIL,
+          createdAt: new Date().toISOString().split('T')[0],
+        };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-        localStorage.setItem('maminu_session', email);
-        onLogin(email);
+        if (email === ADMIN_EMAIL) {
+          localStorage.setItem('maminu_session', email);
+          onLogin(email);
+        } else {
+          setError(isEs
+            ? '✅ Cuenta creada. Espera la aprobación del administrador para ingresar.'
+            : '✅ Account created. Wait for admin approval to sign in.');
+          setLoading(false);
+        }
       } else {
-        if (!stored[email] || stored[email] !== password) {
+        const user = stored[email];
+        if (!user || user.password !== password) {
           setError(isEs ? 'Correo o contraseña incorrectos.' : 'Incorrect email or password.');
           setLoading(false);
           return;
         }
+        if (!user.approved && email !== ADMIN_EMAIL) {
+          setError(isEs
+            ? 'Tu cuenta aún no ha sido aprobada por el administrador.'
+            : 'Your account has not been approved by the admin yet.');
+          setLoading(false);
+          return;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
         localStorage.setItem('maminu_session', email);
         onLogin(email);
       }
