@@ -12,12 +12,18 @@ interface Props {
   foodLogs: Record<string, FoodLog>;
   totalFoods: number;
   onMethodChange: (m: FeedingMethod) => void;
+  isAdmin?: boolean;
+  userEmail?: string | null;
+  onOpenAdmin?: () => void;
+  onLogout?: () => void;
+  onToggleLang?: () => void;
 }
 
 const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
 
 export default function ProfileScreen({
   lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange,
+  isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang,
 }: Props) {
   const tx = t[lang];
 
@@ -93,7 +99,33 @@ export default function ProfileScreen({
         </div>
       </div>
 
-      <div className="h-4" />
+      {/* Account actions (mobile-friendly) */}
+      <div className="px-4 pb-6 pt-2 space-y-2">
+        {isAdmin && onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="w-full py-2.5 rounded-xl text-sm font-medium bg-amber-100 text-amber-800 border border-amber-300"
+          >
+            ⚙️ {lang === 'es' ? 'Panel de Admin' : 'Admin Panel'}
+          </button>
+        )}
+        {onToggleLang && (
+          <button
+            onClick={onToggleLang}
+            className="w-full py-2.5 rounded-xl text-sm bg-gray-50 text-gray-700 border border-gray-200"
+          >
+            {lang === 'es' ? '🇺🇸 Switch to English' : '🇨🇴 Cambiar a Español'}
+          </button>
+        )}
+        {userEmail && onLogout && (
+          <button
+            onClick={onLogout}
+            className="w-full py-2 text-xs text-gray-500 hover:text-gray-700"
+          >
+            {lang === 'es' ? '↩ Cerrar sesión' : '↩ Sign out'} ({userEmail})
+          </button>
+        )}
+      </div>
     </div>
   );
 }
