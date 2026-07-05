@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import type { Lang } from '../data/translations';
 
 interface Props {
@@ -8,37 +9,6 @@ interface Props {
 }
 
 type Mode = 'login' | 'register';
-
-interface UserRecord {
-  password: string;
-  approved: boolean;
-  createdAt: string;
-}
-
-const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
-const STORAGE_KEY = 'maminu_users';
-
-function getUsers(): Record<string, UserRecord> {
-  const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Record<string, unknown>;
-  const out: Record<string, UserRecord> = {};
-  for (const [em, val] of Object.entries(raw)) {
-    if (typeof val === 'string') {
-      out[em] = { password: val, approved: em === ADMIN_EMAIL, createdAt: '—' };
-    } else if (val && typeof val === 'object') {
-      const v = val as Partial<UserRecord>;
-      out[em] = {
-        password: v.password ?? '',
-        approved: v.approved ?? false,
-        createdAt: v.createdAt ?? '—',
-      };
-    }
-  }
-  return out;
-}
-
-function saveUsers(users: Record<string, UserRecord>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-}
 
 export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   const [mode, setMode] = useState<Mode>('login');
@@ -52,7 +22,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   const isEs = lang === 'es';
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
     setPending(false);
 
@@ -71,46 +41,63 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
 
     setLoading(true);
 
-    setTimeout(() => {
-      const users = getUsers();
-
+    try {
       if (mode === 'register') {
-        if (users[email]) {
-          setError(isEs ? 'Este correo ya está registrado.' : 'This email is already registered.');
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (signUpError) {
+          setError(signUpError.message);
           setLoading(false);
           return;
         }
-        const isAdmin = email === ADMIN_EMAIL;
-        users[email] = {
-          password,
-          approved: isAdmin,
-          createdAt: new Date().toLocaleDateString(isEs ? 'es-CO' : 'en-US'),
-        };
-        saveUsers(users);
-
-        if (isAdmin) {
-          localStorage.setItem('maminu_session', email);
-          onLogin(email);
-        } else {
-          setPending(true);
-          setLoading(false);
+        // Check if approved (admin auto-approves)
+        const userId = data.user?.id;
+        if (userId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('approved')
+            .eq('id', userId)
+            .maybeSingle();
+          if (profile?.approved) {
+            onLogin(email);
+            return;
+          }
         }
+        // Not approved → sign out and show pending
+        await supabase.auth.signOut();
+        setPending(true);
+        setLoading(false);
       } else {
-        if (!users[email] || users[email].password !== password) {
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (signInError) {
           setError(isEs ? 'Correo o contraseña incorrectos.' : 'Incorrect email or password.');
           setLoading(false);
           return;
         }
-        if (!users[email].approved) {
+        const userId = data.user?.id;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('approved')
+          .eq('id', userId!)
+          .maybeSingle();
+        if (!profile?.approved) {
+          await supabase.auth.signOut();
           setPending(true);
           setLoading(false);
           return;
         }
-        saveUsers(users);
-        localStorage.setItem('maminu_session', email);
         onLogin(email);
       }
-    }, 600);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setLoading(false);
+    }
   };
 
   if (pending) {
