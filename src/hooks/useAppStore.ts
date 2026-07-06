@@ -29,6 +29,7 @@ interface AppState {
   shoppingList: ShoppingItem[];
   ageFilter: 6 | 8 | 12;
   userEmail: string | null;
+  userId: string | null;
   isAdmin: boolean;
 }
 
@@ -42,6 +43,7 @@ const INITIAL_STATE: AppState = {
   shoppingList: [],
   ageFilter: 6,
   userEmail: null,
+  userId: null,
   isAdmin: false,
 };
 
@@ -49,24 +51,41 @@ export function useAppStore() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
 
   const hydrate = useCallback(async (email: string, userId: string) => {
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
+    const [{ data: roles }, { data: babyRow }] = await Promise.all([
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+      supabase
+        .from('baby_profiles')
+        .select('name, birth_date, method')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
     const isAdmin = (roles ?? []).some(r => r.role === 'admin');
-    setState(s => ({
-      ...s,
-      userEmail: email,
-      isAdmin,
-      screen: s.screen === 'login' ? 'onboarding' : s.screen,
-    }));
+    setState(s => {
+      const hasBaby = !!babyRow;
+      return {
+        ...s,
+        userEmail: email,
+        userId,
+        isAdmin,
+        baby: hasBaby
+          ? { name: babyRow!.name, birthDate: babyRow!.birth_date }
+          : s.baby,
+        method: hasBaby ? (babyRow!.method as FeedingMethod) : s.method,
+        screen:
+          s.screen === 'login' || s.screen === 'onboarding'
+            ? hasBaby
+              ? 'home'
+              : 'onboarding'
+            : s.screen,
+      };
+    });
   }, []);
 
   useEffect(() => {
     // Listen first, then get current session
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
-        setState(s => ({ ...s, userEmail: null, isAdmin: false, screen: 'login' }));
+        setState(s => ({ ...s, userEmail: null, userId: null, isAdmin: false, screen: 'login' }));
         return;
       }
       const u = session.user;
@@ -81,7 +100,19 @@ export function useAppStore() {
   }, [hydrate]);
 
   const setLang = useCallback((lang: Lang) => setState(s => ({ ...s, lang })), []);
-  const setMethod = useCallback((method: FeedingMethod) => setState(s => ({ ...s, method })), []);
+
+  const setMethod = useCallback((method: FeedingMethod) => {
+    setState(s => {
+      if (s.userId && s.baby.name) {
+        void supabase
+          .from('baby_profiles')
+          .update({ method })
+          .eq('user_id', s.userId);
+      }
+      return { ...s, method };
+    });
+  }, []);
+
   const navigateTo = useCallback((screen: Screen, foodId?: string) => {
     setState(s => ({ ...s, screen, selectedFoodId: foodId ?? s.selectedFoodId }));
   }, []);
@@ -142,7 +173,15 @@ export function useAppStore() {
     setState(s => ({ ...s, shoppingList: s.shoppingList.filter(i => !i.checked) }));
   }, []);
 
-  const completeOnboarding = useCallback((name: string, birthDate: string, method: FeedingMethod) => {
+  const completeOnboarding = useCallback(async (name: string, birthDate: string, method: FeedingMethod) => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const uid = sessionData.session?.user?.id;
+    if (uid) {
+      await supabase.from('baby_profiles').upsert(
+        { user_id: uid, name, birth_date: birthDate, method },
+        { onConflict: 'user_id' }
+      );
+    }
     setState(s => ({ ...s, baby: { name, birthDate }, method, screen: 'home' }));
   }, []);
 
@@ -156,6 +195,7 @@ export function useAppStore() {
     setState(s => ({
       ...s,
       userEmail: null,
+      userId: null,
       isAdmin: false,
       screen: 'login',
       baby: { name: '', birthDate: '' },
