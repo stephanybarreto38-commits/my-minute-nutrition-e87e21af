@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      baby_profiles: {
+        Row: {
+          birth_date: string
+          created_at: string
+          method: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date: string
+          created_at?: string
+          method: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string
+          created_at?: string
+          method?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approved: boolean
