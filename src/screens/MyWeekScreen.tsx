@@ -347,6 +347,12 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
             >
               ⚙️ {tx.editConfig}
             </button>
+            <button
+              onClick={() => setShowShopping(true)}
+              className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto"
+            >
+              🛒 {tx.shoppingCta}
+            </button>
           </div>
 
           {eligibleRecipes(plan.config).length === 0 && (
