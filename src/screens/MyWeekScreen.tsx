@@ -8,7 +8,10 @@ interface Props {
   lang: Lang;
   currentMethod: FeedingMethod;
   babyMonths: number;
-  userKey: string; // for persistence scoping
+  savedPlan: unknown | null;
+  onSavePlan: (plan: unknown) => void;
+  pantry: Set<string>;
+  onTogglePantry: (foodId: string) => void;
   onMethodChange?: (m: FeedingMethod) => void;
   onAddToShopping: (items: ShoppingInput[]) => void;
   onGoToShopping: () => void;
@@ -21,12 +24,14 @@ interface WeekConfig {
   method: FeedingMethod;
   ageMonths: number;
   meals: MealSlot[];
-  allergies: string[]; // food ids
+  allergies: string[];
 }
+
+interface Cell { recipeId: string; extras: string[]; }
 
 interface WeekPlan {
   config: WeekConfig;
-  grid: (string | null)[][]; // [day 0..6][mealIndex] → recipeId
+  grid: (Cell | null)[][];
 }
 
 const ALL_MEALS: { key: MealSlot; es: string; en: string; emoji: string }[] = [
@@ -39,7 +44,6 @@ const ALL_MEALS: { key: MealSlot; es: string; en: string; emoji: string }[] = [
 const DAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const DAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-// Semáforo (4 estados) según edad del bebé y estado del alimento
 type Signal = 'ready' | 'soon' | 'avoid' | 'unknown';
 function foodSignal(foodId: string, ageMonths: number): Signal {
   const f = FOODS.find(x => x.id === foodId);
@@ -58,7 +62,6 @@ function recipeSignal(r: Recipe, ageMonths: number): Signal {
 }
 
 function methodColors(m: FeedingMethod) {
-  // BLW = green (design system), BLISS = blue, Purés = purple
   if (m === 'BLISS') return { bg: 'bg-blue-50', border: 'border-blue-200', chip: 'bg-blue-600 text-white', ring: 'ring-blue-300' };
   if (m === 'Purés') return { bg: 'bg-purple-50', border: 'border-purple-200', chip: 'bg-purple-600 text-white', ring: 'ring-purple-300' };
   return { bg: 'bg-green-50', border: 'border-green-200', chip: 'bg-green-700 text-white', ring: 'ring-green-300' };
@@ -91,15 +94,15 @@ function pickRecipe(pool: Recipe[], avoid: Set<string>): string | null {
   return src[Math.floor(Math.random() * src.length)].id;
 }
 
-function buildGrid(cfg: WeekConfig): (string | null)[][] {
+function buildGrid(cfg: WeekConfig): (Cell | null)[][] {
   const pool = eligibleRecipes(cfg);
-  const grid: (string | null)[][] = [];
+  const grid: (Cell | null)[][] = [];
   const recent = new Set<string>();
   for (let d = 0; d < 7; d++) {
-    const row: (string | null)[] = [];
+    const row: (Cell | null)[] = [];
     for (let m = 0; m < cfg.meals.length; m++) {
       const id = pickRecipe(pool, recent);
-      row.push(id);
+      row.push(id ? { recipeId: id, extras: [] } : null);
       if (id) {
         recent.add(id);
         if (recent.size > Math.min(6, Math.max(3, pool.length - 2))) {
@@ -113,7 +116,6 @@ function buildGrid(cfg: WeekConfig): (string | null)[][] {
   return grid;
 }
 
-// Explicit overrides for foods that don't map cleanly by category
 const DAIRY_IDS = new Set<string>(['yogurt', 'cheese', 'milk', 'butter']);
 function foodSection(foodId: string): Section {
   if (DAIRY_IDS.has(foodId)) return 'dairy';
@@ -124,54 +126,61 @@ function foodSection(foodId: string): Section {
   return 'pantry';
 }
 
-interface ShoppingItem { foodId: string; count: number; section: Section; }
+interface ShoppingAgg { foodId: string; count: number; section: Section; }
 
-function buildShoppingList(plan: WeekPlan): Record<Section, ShoppingItem[]> {
+function buildShoppingList(plan: WeekPlan): Record<Section, ShoppingAgg[]> {
   const counts = new Map<string, number>();
   for (const row of plan.grid) {
-    for (const rid of row) {
-      if (!rid) continue;
-      const recipe = RECIPES.find(r => r.id === rid);
-      if (!recipe) continue;
-      for (const fid of recipe.foodIds) {
-        counts.set(fid, (counts.get(fid) ?? 0) + 1);
+    for (const cell of row) {
+      if (!cell) continue;
+      const recipe = RECIPES.find(r => r.id === cell.recipeId);
+      if (recipe) {
+        for (const fid of recipe.foodIds) counts.set(fid, (counts.get(fid) ?? 0) + 1);
       }
+      for (const fid of cell.extras) counts.set(fid, (counts.get(fid) ?? 0) + 1);
     }
   }
-  const groups: Record<Section, ShoppingItem[]> = { produce: [], protein: [], dairy: [], pantry: [] };
+  const groups: Record<Section, ShoppingAgg[]> = { produce: [], protein: [], dairy: [], pantry: [] };
   for (const [foodId, count] of counts.entries()) {
-    const section = foodSection(foodId);
-    groups[section].push({ foodId, count, section });
+    groups[foodSection(foodId)].push({ foodId, count, section: foodSection(foodId) });
   }
-  (Object.keys(groups) as Section[]).forEach(s => {
-    groups[s].sort((a, b) => b.count - a.count);
-  });
+  (Object.keys(groups) as Section[]).forEach(s => groups[s].sort((a, b) => b.count - a.count));
   return groups;
 }
 
+// Migrate legacy grid (string | null) → Cell | null
+function normalizePlan(raw: any): WeekPlan | null {
+  if (!raw || !raw.config || !Array.isArray(raw.grid)) return null;
+  const grid: (Cell | null)[][] = raw.grid.map((row: any[]) =>
+    row.map((cell: any) => {
+      if (!cell) return null;
+      if (typeof cell === 'string') return { recipeId: cell, extras: [] };
+      if (typeof cell === 'object' && cell.recipeId) return { recipeId: cell.recipeId, extras: Array.isArray(cell.extras) ? cell.extras : [] };
+      return null;
+    })
+  );
+  return { config: raw.config, grid };
+}
+
 export default function MyWeekScreen({
-  lang, currentMethod, babyMonths, userKey, onMethodChange, onAddToShopping, onGoToShopping,
+  lang, currentMethod, babyMonths, savedPlan, onSavePlan, pantry, onTogglePantry,
+  onMethodChange, onAddToShopping, onGoToShopping,
 }: Props) {
-  const storageKey = `little_meal_week_plan_${userKey}`;
-  const [plan, setPlan] = useState<WeekPlan | null>(null);
+  const [plan, setPlanState] = useState<WeekPlan | null>(() => normalizePlan(savedPlan));
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // hydrate from localStorage
+  // Sync when store hydrates the plan asynchronously
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (raw) setPlan(JSON.parse(raw));
-    } catch { /* ignore */ }
-  }, [storageKey]);
+    const n = normalizePlan(savedPlan);
+    if (n && !plan) setPlanState(n);
+     
+  }, [savedPlan]);
 
-  // persist
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (plan) window.localStorage.setItem(storageKey, JSON.stringify(plan));
-  }, [plan, storageKey]);
+  const setPlan = (p: WeekPlan | null) => {
+    setPlanState(p);
+    if (p) onSavePlan(p);
+  };
 
-  // onboarding form state
   const [method, setMethod] = useState<FeedingMethod>(currentMethod);
   const [ageMonths, setAgeMonths] = useState<number>(Math.max(6, babyMonths || 6));
   const [meals, setMeals] = useState<MealSlot[]>(['breakfast', 'lunch', 'snack', 'dinner']);
@@ -182,37 +191,9 @@ export default function MyWeekScreen({
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
   const [addedToast, setAddedToast] = useState(false);
 
-  // Persistent pantry (staples the user always has)
-  const pantryKey = `little_meal_pantry_${userKey}`;
-  const [pantry, setPantry] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = window.localStorage.getItem(pantryKey);
-      if (raw) setPantry(new Set(JSON.parse(raw)));
-    } catch { /* ignore */ }
-  }, [pantryKey]);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(pantryKey, JSON.stringify(Array.from(pantry)));
-  }, [pantry, pantryKey]);
-  const togglePantry = (foodId: string) => {
-    setPantry(prev => {
-      const next = new Set(prev);
-      if (next.has(foodId)) next.delete(foodId); else next.add(foodId);
-      return next;
-    });
-  };
-
-  // Preview sheet state
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pantrySheetOpen, setPantrySheetOpen] = useState(false);
   const [alreadyHave, setAlreadyHave] = useState<Set<string>>(new Set());
-
-
-
-
-
 
   const tx = lang === 'es' ? {
     title: 'Mi semana',
@@ -247,6 +228,15 @@ export default function MyWeekScreen({
     pantrySub: 'Alimentos básicos que siempre tenés. Se excluyen automáticamente de cada nueva lista.',
     pantryEmpty: 'Todavía no guardaste alimentos.',
     saveClose: 'Listo',
+    customize: 'Personalizar plato',
+    customizeHint: 'Agregá ingredientes extra al plato (proteína, fruta, vegetal…).',
+    extras: 'Extras',
+    randomSuggest: 'Sugerencia aleatoria',
+    catFruits: 'Frutas',
+    catVeg: 'Vegetales',
+    catProt: 'Proteínas',
+    catGrains: 'Granos',
+    catOther: 'Otros',
   } : {
     title: 'My week',
     sub: 'Plan 7 days of meals for your baby.',
@@ -280,8 +270,16 @@ export default function MyWeekScreen({
     pantrySub: 'Staples you always have. They\u2019re auto-excluded from every new list.',
     pantryEmpty: 'No staples saved yet.',
     saveClose: 'Done',
+    customize: 'Customize plate',
+    customizeHint: 'Add extras to this plate (protein, fruit, veggie…).',
+    extras: 'Extras',
+    randomSuggest: 'Random suggestion',
+    catFruits: 'Fruits',
+    catVeg: 'Vegetables',
+    catProt: 'Proteins',
+    catGrains: 'Grains',
+    catOther: 'Other',
   };
-
 
   const openOnboarding = () => {
     if (plan) {
@@ -295,8 +293,7 @@ export default function MyWeekScreen({
 
   const submitOnboarding = () => {
     const cfg: WeekConfig = {
-      method,
-      ageMonths,
+      method, ageMonths,
       meals: meals.length ? meals : ['breakfast', 'lunch', 'snack', 'dinner'],
       allergies: Array.from(allergies),
     };
@@ -314,12 +311,24 @@ export default function MyWeekScreen({
   const swapMeal = (day: number, meal: number) => {
     if (!plan) return;
     const pool = eligibleRecipes(plan.config);
-    const current = plan.grid[day][meal];
+    const current = plan.grid[day][meal]?.recipeId;
     const avoid = new Set<string>(current ? [current] : []);
     const next = pickRecipe(pool, avoid);
-    const grid = plan.grid.map((row, di) => row.map((cell, mi) => (di === day && mi === meal ? next : cell)));
+    const grid = plan.grid.map((row, di) => row.map((cell, mi) =>
+      di === day && mi === meal ? (next ? { recipeId: next, extras: [] } : null) : cell
+    ));
     setPlan({ ...plan, grid });
     setSwapFor(null);
+  };
+
+  const toggleExtra = (day: number, meal: number, foodId: string) => {
+    if (!plan) return;
+    const grid = plan.grid.map((row, di) => row.map((cell, mi) => {
+      if (di !== day || mi !== meal || !cell) return cell;
+      const has = cell.extras.includes(foodId);
+      return { ...cell, extras: has ? cell.extras.filter(x => x !== foodId) : [...cell.extras, foodId] };
+    }));
+    setPlan({ ...plan, grid });
   };
 
   const days = lang === 'es' ? DAYS_ES : DAYS_EN;
@@ -345,10 +354,8 @@ export default function MyWeekScreen({
         <div className="p-6 flex flex-col items-center text-center gap-4">
           <div className="text-6xl">🗓️</div>
           <p className="text-gray-600 max-w-sm">{tx.sub}</p>
-          <button
-            onClick={openOnboarding}
-            className="mt-2 bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow hover:bg-green-800 transition"
-          >
+          <button onClick={openOnboarding}
+            className="mt-2 bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow hover:bg-green-800 transition">
             {tx.startCta}
           </button>
         </div>
@@ -356,53 +363,31 @@ export default function MyWeekScreen({
 
       {showOnboarding && (
         <OnboardingForm
-          tx={tx}
-          method={method}
-          setMethod={setMethod}
-          ageMonths={ageMonths}
-          setAgeMonths={setAgeMonths}
-          meals={meals}
-          setMeals={setMeals}
-          allergies={allergies}
-          setAllergies={setAllergies}
-          commonAllergens={commonAllergens}
-          lang={lang}
+          tx={tx} method={method} setMethod={setMethod}
+          ageMonths={ageMonths} setAgeMonths={setAgeMonths}
+          meals={meals} setMeals={setMeals}
+          allergies={allergies} setAllergies={setAllergies}
+          commonAllergens={commonAllergens} lang={lang}
           onCancel={() => setShowOnboarding(false)}
-          onSubmit={submitOnboarding}
-          canCancel={!!plan}
+          onSubmit={submitOnboarding} canCancel={!!plan}
         />
       )}
 
       {plan && !showOnboarding && (
         <>
           <div className="px-5 py-3 flex flex-wrap items-center gap-2">
-            <button
-              onClick={regenerate}
-              className="text-xs font-semibold bg-gray-900 text-white px-3 py-2 rounded-xl hover:bg-black transition"
-            >
+            <button onClick={regenerate} className="text-xs font-semibold bg-gray-900 text-white px-3 py-2 rounded-xl hover:bg-black transition">
               🔄 {tx.regenerate}
             </button>
-            <button
-              onClick={openOnboarding}
-              className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition"
-            >
+            <button onClick={openOnboarding} className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
               ⚙️ {tx.editConfig}
             </button>
-            <button
-              onClick={() => setPantrySheetOpen(true)}
-              className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition"
-            >
+            <button onClick={() => setPantrySheetOpen(true)} className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
               🥫 {tx.managePantry}
             </button>
             <button
-              onClick={() => {
-                if (!plan) return;
-                // pre-check items already in the persistent pantry
-                setAlreadyHave(new Set(pantry));
-                setPreviewOpen(true);
-              }}
-              className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto"
-            >
+              onClick={() => { setAlreadyHave(new Set(pantry)); setPreviewOpen(true); }}
+              className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto">
               🛒 {tx.shoppingCta}
             </button>
           </div>
@@ -418,21 +403,16 @@ export default function MyWeekScreen({
               <div key={dayIdx} className={`rounded-2xl border ${colors.border} ${colors.bg} p-3`}>
                 <div className="flex items-center justify-between mb-2 px-1">
                   <p className="text-sm font-bold text-gray-800">{days[dayIdx]}</p>
-                  <span className="text-[10px] uppercase tracking-wide text-gray-500">
-                    {plan.config.method}
-                  </span>
+                  <span className="text-[10px] uppercase tracking-wide text-gray-500">{plan.config.method}</span>
                 </div>
                 <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${plan.config.meals.length}, minmax(0, 1fr))` }}>
-                  {row.map((rid, mealIdx) => {
+                  {row.map((cell, mealIdx) => {
                     const mealDef = ALL_MEALS.find(m => m.key === plan.config.meals[mealIdx])!;
-                    const recipe = rid ? RECIPES.find(r => r.id === rid) : null;
+                    const recipe = cell ? RECIPES.find(r => r.id === cell.recipeId) : null;
                     const sig = recipe ? recipeSignal(recipe, plan.config.ageMonths) : 'unknown';
                     return (
-                      <button
-                        key={mealIdx}
-                        onClick={() => setSwapFor({ day: dayIdx, meal: mealIdx })}
-                        className={`text-left bg-white rounded-xl p-2.5 border border-gray-200 hover:ring-2 ${colors.ring} transition flex flex-col gap-1 min-h-[92px]`}
-                      >
+                      <button key={mealIdx} onClick={() => setSwapFor({ day: dayIdx, meal: mealIdx })}
+                        className={`text-left bg-white rounded-xl p-2.5 border border-gray-200 hover:ring-2 ${colors.ring} transition flex flex-col gap-1 min-h-[92px]`}>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-semibold text-gray-500 uppercase">
                             {mealDef.emoji} {lang === 'es' ? mealDef.es : mealDef.en}
@@ -440,9 +420,20 @@ export default function MyWeekScreen({
                           {recipe && signalPill(sig, lang)}
                         </div>
                         {recipe ? (
-                          <p className="text-xs font-semibold text-gray-800 leading-tight line-clamp-3">
-                            {lang === 'es' ? recipe.titleEs : recipe.titleEn}
-                          </p>
+                          <>
+                            <p className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">
+                              {lang === 'es' ? recipe.titleEs : recipe.titleEn}
+                            </p>
+                            {cell && cell.extras.length > 0 && (
+                              <div className="flex flex-wrap gap-0.5 mt-0.5">
+                                {cell.extras.map(fid => {
+                                  const f = FOODS.find(x => x.id === fid);
+                                  if (!f) return null;
+                                  return <span key={fid} className="text-[9px]" title={lang === 'es' ? f.nameEs : f.nameEn}>{f.emoji}</span>;
+                                })}
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <p className="text-xs text-gray-400 italic">{tx.empty}</p>
                         )}
@@ -458,28 +449,23 @@ export default function MyWeekScreen({
 
       {swapFor && plan && (
         <SwapSheet
-          lang={lang}
-          tx={tx}
-          plan={plan}
-          day={swapFor.day}
-          meal={swapFor.meal}
+          lang={lang} tx={tx} plan={plan} day={swapFor.day} meal={swapFor.meal}
           onPick={(rid) => {
-            const grid = plan.grid.map((row, di) => row.map((cell, mi) => (di === swapFor.day && mi === swapFor.meal ? rid : cell)));
+            const grid = plan.grid.map((row, di) => row.map((cell, mi) =>
+              di === swapFor.day && mi === swapFor.meal ? { recipeId: rid, extras: cell?.extras ?? [] } : cell
+            ));
             setPlan({ ...plan, grid });
             setSwapFor(null);
           }}
           onRandom={() => swapMeal(swapFor.day, swapFor.meal)}
+          onToggleExtra={(fid) => toggleExtra(swapFor.day, swapFor.meal, fid)}
           onClose={() => setSwapFor(null)}
         />
       )}
 
       {previewOpen && plan && (
         <PreviewSheet
-          lang={lang}
-          tx={tx}
-          plan={plan}
-          pantry={pantry}
-          alreadyHave={alreadyHave}
+          lang={lang} tx={tx} plan={plan} pantry={pantry} alreadyHave={alreadyHave}
           onToggleHave={(fid) => setAlreadyHave(prev => {
             const next = new Set(prev);
             if (next.has(fid)) next.delete(fid); else next.add(fid);
@@ -492,38 +478,23 @@ export default function MyWeekScreen({
             const items: ShoppingInput[] = [];
             (['produce', 'protein', 'dairy', 'pantry'] as Section[]).forEach(sec => {
               groups[sec].forEach(g => {
-                if (alreadyHave.has(g.foodId)) return; // excluded
+                if (alreadyHave.has(g.foodId)) return;
                 const f = FOODS.find(x => x.id === g.foodId);
                 if (!f) return;
-                items.push({
-                  nameEs: f.nameEs,
-                  nameEn: f.nameEn,
-                  tag: 'baby',
-                  section: sec,
-                  quantity: g.count,
-                });
+                items.push({ nameEs: f.nameEs, nameEn: f.nameEn, tag: 'baby', section: sec, quantity: g.count });
               });
             });
             setPreviewOpen(false);
             if (items.length === 0) return;
             onAddToShopping(items);
             setAddedToast(true);
-            setTimeout(() => {
-              setAddedToast(false);
-              onGoToShopping();
-            }, 700);
+            setTimeout(() => { setAddedToast(false); onGoToShopping(); }, 700);
           }}
         />
       )}
 
       {pantrySheetOpen && (
-        <PantrySheet
-          lang={lang}
-          tx={tx}
-          pantry={pantry}
-          onToggle={togglePantry}
-          onClose={() => setPantrySheetOpen(false)}
-        />
+        <PantrySheet lang={lang} tx={tx} pantry={pantry} onToggle={onTogglePantry} onClose={() => setPantrySheetOpen(false)} />
       )}
 
       {addedToast && (
@@ -537,20 +508,12 @@ export default function MyWeekScreen({
 
 // ─── Onboarding form ────────────────────────────────────────────────
 function OnboardingForm(props: {
-  tx: any;
-  method: FeedingMethod;
-  setMethod: (m: FeedingMethod) => void;
-  ageMonths: number;
-  setAgeMonths: (n: number) => void;
-  meals: MealSlot[];
-  setMeals: (m: MealSlot[]) => void;
-  allergies: Set<string>;
-  setAllergies: (s: Set<string>) => void;
-  commonAllergens: typeof FOODS;
-  lang: Lang;
-  onCancel: () => void;
-  onSubmit: () => void;
-  canCancel: boolean;
+  tx: any; method: FeedingMethod; setMethod: (m: FeedingMethod) => void;
+  ageMonths: number; setAgeMonths: (n: number) => void;
+  meals: MealSlot[]; setMeals: (m: MealSlot[]) => void;
+  allergies: Set<string>; setAllergies: (s: Set<string>) => void;
+  commonAllergens: typeof FOODS; lang: Lang;
+  onCancel: () => void; onSubmit: () => void; canCancel: boolean;
 }) {
   const { tx, method, setMethod, ageMonths, setAgeMonths, meals, setMeals, allergies, setAllergies, commonAllergens, lang, onCancel, onSubmit, canCancel } = props;
   const toggleMeal = (k: MealSlot) => {
@@ -634,71 +597,128 @@ function OnboardingForm(props: {
   );
 }
 
-// ─── Swap sheet ────────────────────────────────────────────────
+// ─── Swap sheet with plate customization ──────────────────────────────
 function SwapSheet(props: {
-  lang: Lang;
-  tx: any;
-  plan: WeekPlan;
-  day: number;
-  meal: number;
+  lang: Lang; tx: any; plan: WeekPlan; day: number; meal: number;
   onPick: (recipeId: string) => void;
   onRandom: () => void;
+  onToggleExtra: (foodId: string) => void;
   onClose: () => void;
 }) {
-  const { lang, tx, plan, day, meal, onPick, onRandom, onClose } = props;
+  const { lang, tx, plan, day, meal, onPick, onRandom, onToggleExtra, onClose } = props;
   const pool = useMemo(() => eligibleRecipes(plan.config), [plan.config]);
-  const current = plan.grid[day][meal];
+  const cell = plan.grid[day][meal];
+  const current = cell?.recipeId;
+  const extras = cell?.extras ?? [];
+  const currentRecipe = current ? RECIPES.find(r => r.id === current) : null;
+  const recipeFoodIds = new Set(currentRecipe?.foodIds ?? []);
+
+  const categoryGroups = useMemo(() => {
+    const groups: { key: string; label: string; foods: typeof FOODS }[] = [
+      { key: 'proteins', label: tx.catProt, foods: [] },
+      { key: 'vegetables', label: tx.catVeg, foods: [] },
+      { key: 'fruits', label: tx.catFruits, foods: [] },
+      { key: 'grains', label: tx.catGrains, foods: [] },
+      { key: 'other', label: tx.catOther, foods: [] },
+    ];
+    for (const f of FOODS) {
+      if (recipeFoodIds.has(f.id)) continue;
+      if (f.status === 'avoid') continue;
+      if (f.fromMonths > plan.config.ageMonths + 2) continue;
+      if (plan.config.allergies.includes(f.id)) continue;
+      const g = groups.find(x => x.key === f.category) ?? groups[groups.length - 1];
+      g.foods.push(f);
+    }
+    return groups.filter(g => g.foods.length > 0);
+  }, [plan.config, recipeFoodIds, tx]);
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-bold text-gray-900">{tx.swapTitle}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
         </div>
-        <div className="p-4 flex gap-2">
-          <button onClick={onRandom} className="flex-1 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
-            🎲 {lang === 'es' ? 'Sugerencia aleatoria' : 'Random suggestion'}
-          </button>
-        </div>
-        <div className="overflow-y-auto flex-1 px-3 pb-4 space-y-2">
-          {pool.map(r => {
-            const sig = recipeSignal(r, plan.config.ageMonths);
-            const active = current === r.id;
-            return (
-              <button key={r.id} onClick={() => onPick(r.id)}
-                className={`w-full text-left p-3 rounded-xl border transition ${active ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                <div className="flex justify-between items-start gap-2">
-                  <p className="text-sm font-semibold text-gray-800">
-                    {lang === 'es' ? r.titleEs : r.titleEn}
-                  </p>
-                  {signalPill(sig, lang)}
+
+        <div className="overflow-y-auto flex-1">
+          {currentRecipe && (
+            <section className="px-4 pt-4 pb-3 border-b bg-green-50/40">
+              <p className="text-[11px] font-bold text-green-800 uppercase tracking-wide mb-1">🍽️ {tx.customize}</p>
+              <p className="text-[11px] text-gray-600 mb-2">{tx.customizeHint}</p>
+              {extras.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {extras.map(fid => {
+                    const f = FOODS.find(x => x.id === fid);
+                    if (!f) return null;
+                    return (
+                      <button key={fid} onClick={() => onToggleExtra(fid)}
+                        className="text-[11px] px-2 py-0.5 rounded-full bg-green-700 text-white flex items-center gap-1">
+                        <span>{f.emoji}</span>
+                        <span>{lang === 'es' ? f.nameEs : f.nameEn}</span>
+                        <span className="opacity-80">×</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  {r.timeMin} min · {r.methodBadges.join(' · ')}
-                </p>
-              </button>
-            );
-          })}
-          {pool.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-6">{tx.noMatches}</p>
+              )}
+              <div className="space-y-2">
+                {categoryGroups.map(g => (
+                  <div key={g.key}>
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">{g.label}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {g.foods.slice(0, 14).map(f => {
+                        const active = extras.includes(f.id);
+                        return (
+                          <button key={f.id} onClick={() => onToggleExtra(f.id)}
+                            className={`text-[11px] px-2 py-0.5 rounded-full border transition ${active ? 'bg-green-700 text-white border-transparent' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                            {f.emoji} {lang === 'es' ? f.nameEs : f.nameEn}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
+
+          <div className="p-4 flex gap-2 border-b">
+            <button onClick={onRandom} className="flex-1 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
+              🎲 {tx.randomSuggest}
+            </button>
+          </div>
+
+          <div className="px-3 py-3 space-y-2">
+            {pool.map(r => {
+              const sig = recipeSignal(r, plan.config.ageMonths);
+              const active = current === r.id;
+              return (
+                <button key={r.id} onClick={() => onPick(r.id)}
+                  className={`w-full text-left p-3 rounded-xl border transition ${active ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="text-sm font-semibold text-gray-800">
+                      {lang === 'es' ? r.titleEs : r.titleEn}
+                    </p>
+                    {signalPill(sig, lang)}
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    {r.timeMin} min · {r.methodBadges.join(' · ')}
+                  </p>
+                </button>
+              );
+            })}
+            {pool.length === 0 && <p className="text-sm text-gray-500 text-center py-6">{tx.noMatches}</p>}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Preview sheet (review + "I already have it") ──────────────────
+// ─── Preview sheet ──────────────────────────────────────────────
 function PreviewSheet(props: {
-  lang: Lang;
-  tx: any;
-  plan: WeekPlan;
-  pantry: Set<string>;
-  alreadyHave: Set<string>;
-  onToggleHave: (foodId: string) => void;
-  onOpenPantry: () => void;
-  onClose: () => void;
-  onConfirm: () => void;
+  lang: Lang; tx: any; plan: WeekPlan; pantry: Set<string>; alreadyHave: Set<string>;
+  onToggleHave: (foodId: string) => void; onOpenPantry: () => void; onClose: () => void; onConfirm: () => void;
 }) {
   const { lang, tx, plan, pantry, alreadyHave, onToggleHave, onOpenPantry, onClose, onConfirm } = props;
   const groups = useMemo(() => buildShoppingList(plan), [plan]);
@@ -718,21 +738,14 @@ function PreviewSheet(props: {
         </div>
 
         <div className="px-4 py-2 border-b flex items-center justify-between">
-          <span className="text-[11px] text-gray-500">
-            {remaining} / {totalItems}
-          </span>
-          <button
-            onClick={onOpenPantry}
-            className="text-[11px] font-semibold text-green-700 hover:underline"
-          >
+          <span className="text-[11px] text-gray-500">{remaining} / {totalItems}</span>
+          <button onClick={onOpenPantry} className="text-[11px] font-semibold text-green-700 hover:underline">
             🥫 {tx.managePantry}
           </button>
         </div>
 
         <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3 pt-3">
-          {totalItems === 0 && (
-            <p className="text-sm text-gray-500 text-center py-6">{tx.shoppingEmpty}</p>
-          )}
+          {totalItems === 0 && <p className="text-sm text-gray-500 text-center py-6">{tx.shoppingEmpty}</p>}
           {order.map(sec => {
             const items = groups[sec];
             if (!items.length) return null;
@@ -750,12 +763,8 @@ function PreviewSheet(props: {
                     return (
                       <li key={g.foodId}>
                         <label className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 ${have ? 'opacity-50' : ''}`}>
-                          <input
-                            type="checkbox"
-                            checked={have}
-                            onChange={() => onToggleHave(g.foodId)}
-                            className="w-4 h-4 accent-green-700"
-                          />
+                          <input type="checkbox" checked={have} onChange={() => onToggleHave(g.foodId)}
+                            className="w-4 h-4 accent-green-700" />
                           <span className="text-lg">{f.emoji}</span>
                           <span className={`flex-1 text-sm font-medium text-gray-800 ${have ? 'line-through' : ''}`}>
                             {lang === 'es' ? f.nameEs : f.nameEn}
@@ -778,11 +787,8 @@ function PreviewSheet(props: {
         </div>
 
         <div className="p-4 border-t bg-white">
-          <button
-            onClick={onConfirm}
-            disabled={remaining === 0}
-            className="w-full py-3 rounded-2xl bg-green-700 text-white font-semibold shadow hover:bg-green-800 transition disabled:opacity-50"
-          >
+          <button onClick={onConfirm} disabled={remaining === 0}
+            className="w-full py-3 rounded-2xl bg-green-700 text-white font-semibold shadow hover:bg-green-800 transition disabled:opacity-50">
             🛒 {tx.addFinal} {remaining > 0 && <span className="opacity-80">({remaining})</span>}
           </button>
         </div>
@@ -791,13 +797,10 @@ function PreviewSheet(props: {
   );
 }
 
-// ─── Pantry sheet (persistent staples) ──────────────────────────────
+// ─── Pantry sheet ──────────────────────────────
 function PantrySheet(props: {
-  lang: Lang;
-  tx: any;
-  pantry: Set<string>;
-  onToggle: (foodId: string) => void;
-  onClose: () => void;
+  lang: Lang; tx: any; pantry: Set<string>;
+  onToggle: (foodId: string) => void; onClose: () => void;
 }) {
   const { lang, tx, pantry, onToggle, onClose } = props;
   const [query, setQuery] = useState('');
@@ -832,38 +835,27 @@ function PantrySheet(props: {
         </div>
 
         <div className="p-3 border-b">
-          <input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
+          <input value={query} onChange={e => setQuery(e.target.value)}
             placeholder={lang === 'es' ? 'Buscar alimento…' : 'Search food…'}
-            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
-          />
+            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-300" />
         </div>
 
         <div className="overflow-y-auto flex-1 px-3 py-2">
-          {pantry.size === 0 && !q && (
-            <p className="text-xs text-gray-500 text-center py-3">{tx.pantryEmpty}</p>
-          )}
+          {pantry.size === 0 && !q && <p className="text-xs text-gray-500 text-center py-3">{tx.pantryEmpty}</p>}
           <ul className="divide-y divide-gray-100">
             {list.map(({ f }) => {
               const active = pantry.has(f.id);
               return (
                 <li key={f.id}>
                   <label className="flex items-center gap-3 px-2 py-2.5 cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={active}
-                      onChange={() => onToggle(f.id)}
-                      className="w-4 h-4 accent-green-700"
-                    />
+                    <input type="checkbox" checked={active} onChange={() => onToggle(f.id)}
+                      className="w-4 h-4 accent-green-700" />
                     <span className="text-lg">{f.emoji}</span>
                     <span className="flex-1 text-sm font-medium text-gray-800">
                       {lang === 'es' ? f.nameEs : f.nameEn}
                     </span>
                     {active && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                        ✓
-                      </span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">✓</span>
                     )}
                   </label>
                 </li>
@@ -872,11 +864,8 @@ function PantrySheet(props: {
           </ul>
         </div>
 
-        <div className="p-4 border-t bg-white">
-          <button
-            onClick={onClose}
-            className="w-full py-3 rounded-2xl bg-gray-900 text-white font-semibold hover:bg-black transition"
-          >
+        <div className="p-3 border-t">
+          <button onClick={onClose} className="w-full py-2.5 rounded-xl bg-green-700 text-white font-semibold text-sm hover:bg-green-800 transition">
             {tx.saveClose}
           </button>
         </div>
