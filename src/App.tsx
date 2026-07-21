@@ -175,6 +175,8 @@ export default function App() {
               babyMonths={babyMonths}
               userKey={store.userId ?? store.userEmail ?? 'guest'}
               onMethodChange={store.setMethod}
+              onAddToShopping={store.addWeekToShoppingList}
+              onGoToShopping={() => store.navigateTo('shopping')}
             />
           )}
           {store.screen === 'admin' && store.isAdmin && (
