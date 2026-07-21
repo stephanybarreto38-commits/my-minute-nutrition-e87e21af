@@ -217,10 +217,12 @@ export default function FoodDetailScreen({
                       <p className="text-[12px] text-amber-900 leading-snug">{adultDesc}</p>
                       <button
                         onClick={() => onAddToShopping(
-                          adultItems.map((name, i) => ({
+                          adultItems.map((_name, i) => ({
                             nameEs: recipe.adultIngredientsEs[i],
                             nameEn: recipe.adultIngredientsEn[i],
                             tag: 'mom' as const,
+                            section: 'pantry' as const,
+                            quantity: 1,
                           }))
                         )}
                         className="mt-1.5 text-[11px] text-amber-700 flex items-center gap-1"
