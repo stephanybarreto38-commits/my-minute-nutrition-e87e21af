@@ -11,13 +11,22 @@ export interface BabyProfile {
   birthDate: string;
 }
 
+export type ShoppingSection = 'produce' | 'protein' | 'dairy' | 'pantry';
+
 export interface ShoppingItem {
   id: string;
   nameEs: string;
   nameEn: string;
   tag: 'baby' | 'mom';
+  section: ShoppingSection;
+  quantity: number;
   checked: boolean;
 }
+
+export type ShoppingInput = Omit<ShoppingItem, 'id' | 'checked' | 'section' | 'quantity'> & {
+  section?: ShoppingSection;
+  quantity?: number;
+};
 
 interface AppState {
   lang: Lang;
