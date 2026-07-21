@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
-import type { FeedingMethod, BabyProfile, BabyShare } from '../hooks/useAppStore';
+import type { FeedingMethod, BabyProfile } from '../hooks/useAppStore';
 import type { FoodLog } from '../data/foods';
-import ShareSheet from '../components/ShareSheet';
 
 interface Props {
   lang: Lang;
@@ -18,21 +16,15 @@ interface Props {
   onOpenAdmin?: () => void;
   onLogout?: () => void;
   onToggleLang?: () => void;
-  onAddBaby?: () => void;
-  shareBaby: (babyId: string, email: string, role: 'viewer' | 'editor') => Promise<{ id: string; token: string } | null>;
-  listShares: (babyId: string) => Promise<BabyShare[]>;
-  revokeShare: (shareId: string) => Promise<void>;
 }
 
 const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
 
 export default function ProfileScreen({
   lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange,
-  isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang, onAddBaby,
-  shareBaby, listShares, revokeShare,
+  isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang,
 }: Props) {
   const tx = t[lang];
-  const [shareOpen, setShareOpen] = useState(false);
 
   const triedCount = Object.values(foodLogs).filter(l => l.tried).length;
   const recipesCount = 3;
@@ -92,22 +84,6 @@ export default function ProfileScreen({
       </div>
 
       <div className="px-4 pb-6 pt-2 space-y-2">
-        {baby.id && (
-          <button
-            onClick={() => setShareOpen(true)}
-            className="w-full py-2.5 rounded-xl text-sm font-medium bg-green-600 text-white hover:bg-green-700"
-          >
-            👥 {lang === 'es' ? 'Compartir con mi pareja' : 'Share with partner'}
-          </button>
-        )}
-        {onAddBaby && (
-          <button
-            onClick={onAddBaby}
-            className="w-full py-2.5 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200"
-          >
-            ➕ {lang === 'es' ? 'Agregar otro bebé' : 'Add another baby'}
-          </button>
-        )}
         {isAdmin && onOpenAdmin && (
           <button onClick={onOpenAdmin} className="w-full py-2.5 rounded-xl text-sm font-medium bg-amber-100 text-amber-800 border border-amber-300">
             ⚙️ {lang === 'es' ? 'Panel de Admin' : 'Admin Panel'}
@@ -124,13 +100,6 @@ export default function ProfileScreen({
           </button>
         )}
       </div>
-
-      {shareOpen && (
-        <ShareSheet
-          lang={lang} baby={baby} onClose={() => setShareOpen(false)}
-          shareBaby={shareBaby} listShares={listShares} revokeShare={revokeShare}
-        />
-      )}
     </div>
   );
 }
