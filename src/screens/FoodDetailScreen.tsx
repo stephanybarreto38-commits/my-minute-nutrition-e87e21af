@@ -13,7 +13,7 @@ interface Props {
   method: FeedingMethod;
   onBack: () => void;
   onSaveLog: (foodId: string, log: Partial<FoodLog>) => void;
-  onAddToShopping: (items: Omit<ShoppingItem, 'id' | 'checked'>[]) => void;
+  onAddToShopping: (items: ShoppingInput[]) => void;
 }
 
 type Tab = 'prep' | 'menu' | 'log';
