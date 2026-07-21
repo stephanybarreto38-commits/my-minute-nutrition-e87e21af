@@ -687,3 +687,200 @@ function SwapSheet(props: {
     </div>
   );
 }
+
+// ─── Preview sheet (review + "I already have it") ──────────────────
+function PreviewSheet(props: {
+  lang: Lang;
+  tx: any;
+  plan: WeekPlan;
+  pantry: Set<string>;
+  alreadyHave: Set<string>;
+  onToggleHave: (foodId: string) => void;
+  onOpenPantry: () => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const { lang, tx, plan, pantry, alreadyHave, onToggleHave, onOpenPantry, onClose, onConfirm } = props;
+  const groups = useMemo(() => buildShoppingList(plan), [plan]);
+  const order: Section[] = ['produce', 'protein', 'dairy', 'pantry'];
+  const totalItems = order.reduce((sum, s) => sum + groups[s].length, 0);
+  const remaining = order.reduce((sum, s) => sum + groups[s].filter(g => !alreadyHave.has(g.foodId)).length, 0);
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-bold text-gray-900">{tx.previewTitle}</h3>
+            <p className="text-[11px] text-gray-500 mt-0.5">{tx.previewSub}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+        </div>
+
+        <div className="px-4 py-2 border-b flex items-center justify-between">
+          <span className="text-[11px] text-gray-500">
+            {remaining} / {totalItems}
+          </span>
+          <button
+            onClick={onOpenPantry}
+            className="text-[11px] font-semibold text-green-700 hover:underline"
+          >
+            🥫 {tx.managePantry}
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3 pt-3">
+          {totalItems === 0 && (
+            <p className="text-sm text-gray-500 text-center py-6">{tx.shoppingEmpty}</p>
+          )}
+          {order.map(sec => {
+            const items = groups[sec];
+            if (!items.length) return null;
+            return (
+              <div key={sec} className="rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{tx.sections[sec]}</p>
+                </div>
+                <ul className="divide-y divide-gray-100">
+                  {items.map(g => {
+                    const f = FOODS.find(x => x.id === g.foodId);
+                    if (!f) return null;
+                    const have = alreadyHave.has(g.foodId);
+                    const isStaple = pantry.has(g.foodId);
+                    return (
+                      <li key={g.foodId}>
+                        <label className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 ${have ? 'opacity-50' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={have}
+                            onChange={() => onToggleHave(g.foodId)}
+                            className="w-4 h-4 accent-green-700"
+                          />
+                          <span className="text-lg">{f.emoji}</span>
+                          <span className={`flex-1 text-sm font-medium text-gray-800 ${have ? 'line-through' : ''}`}>
+                            {lang === 'es' ? f.nameEs : f.nameEn}
+                            {g.count > 1 && <span className="ml-1 text-[11px] text-gray-500">×{g.count}</span>}
+                          </span>
+                          {isStaple && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                              🥫 {tx.fromPantry}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-gray-500">{have ? tx.alreadyHave : ''}</span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t bg-white">
+          <button
+            onClick={onConfirm}
+            disabled={remaining === 0}
+            className="w-full py-3 rounded-2xl bg-green-700 text-white font-semibold shadow hover:bg-green-800 transition disabled:opacity-50"
+          >
+            🛒 {tx.addFinal} {remaining > 0 && <span className="opacity-80">({remaining})</span>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Pantry sheet (persistent staples) ──────────────────────────────
+function PantrySheet(props: {
+  lang: Lang;
+  tx: any;
+  pantry: Set<string>;
+  onToggle: (foodId: string) => void;
+  onClose: () => void;
+}) {
+  const { lang, tx, pantry, onToggle, onClose } = props;
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const list = useMemo(() => {
+    const withSection = FOODS.map(f => ({ f, sec: (function () {
+      if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
+      if (f.category === 'proteins') return 'protein';
+      if (['yogurt', 'cheese', 'milk', 'butter'].includes(f.id)) return 'dairy';
+      return 'pantry';
+    })() as Section }));
+    const filtered = q
+      ? withSection.filter(({ f }) => f.nameEs.toLowerCase().includes(q) || f.nameEn.toLowerCase().includes(q))
+      : withSection;
+    return filtered.sort((a, b) => {
+      const inA = pantry.has(a.f.id) ? 0 : 1;
+      const inB = pantry.has(b.f.id) ? 0 : 1;
+      if (inA !== inB) return inA - inB;
+      return (lang === 'es' ? a.f.nameEs.localeCompare(b.f.nameEs) : a.f.nameEn.localeCompare(b.f.nameEn));
+    });
+  }, [q, pantry, lang]);
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-bold text-gray-900">🥫 {tx.pantryTitle}</h3>
+            <p className="text-[11px] text-gray-500 mt-0.5">{tx.pantrySub}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+        </div>
+
+        <div className="p-3 border-b">
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={lang === 'es' ? 'Buscar alimento…' : 'Search food…'}
+            className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+          />
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-3 py-2">
+          {pantry.size === 0 && !q && (
+            <p className="text-xs text-gray-500 text-center py-3">{tx.pantryEmpty}</p>
+          )}
+          <ul className="divide-y divide-gray-100">
+            {list.map(({ f }) => {
+              const active = pantry.has(f.id);
+              return (
+                <li key={f.id}>
+                  <label className="flex items-center gap-3 px-2 py-2.5 cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() => onToggle(f.id)}
+                      className="w-4 h-4 accent-green-700"
+                    />
+                    <span className="text-lg">{f.emoji}</span>
+                    <span className="flex-1 text-sm font-medium text-gray-800">
+                      {lang === 'es' ? f.nameEs : f.nameEn}
+                    </span>
+                    {active && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                        ✓
+                      </span>
+                    )}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="p-4 border-t bg-white">
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-2xl bg-gray-900 text-white font-semibold hover:bg-black transition"
+          >
+            {tx.saveClose}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
