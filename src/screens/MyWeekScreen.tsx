@@ -339,7 +339,31 @@ export default function MyWeekScreen({
               ⚙️ {tx.editConfig}
             </button>
             <button
-              onClick={() => setShowShopping(true)}
+              onClick={() => {
+                if (!plan) return;
+                const groups = buildShoppingList(plan);
+                const items: ShoppingInput[] = [];
+                (['produce', 'protein', 'dairy', 'pantry'] as Section[]).forEach(sec => {
+                  groups[sec].forEach(g => {
+                    const f = FOODS.find(x => x.id === g.foodId);
+                    if (!f) return;
+                    items.push({
+                      nameEs: f.nameEs,
+                      nameEn: f.nameEn,
+                      tag: 'baby',
+                      section: sec,
+                      quantity: g.count,
+                    });
+                  });
+                });
+                if (items.length === 0) return;
+                onAddToShopping(items);
+                setAddedToast(true);
+                setTimeout(() => {
+                  setAddedToast(false);
+                  onGoToShopping();
+                }, 800);
+              }}
               className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto"
             >
               🛒 {tx.shoppingCta}
