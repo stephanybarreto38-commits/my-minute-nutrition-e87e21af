@@ -419,6 +419,8 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
           onRandom={() => swapMeal(swapFor.day, swapFor.meal)}
           onClose={() => setSwapFor(null)}
         />
+      )}
+
       {showShopping && plan && (
         <ShoppingSheet
           lang={lang}
