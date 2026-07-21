@@ -237,6 +237,16 @@ export default function MyWeekScreen({
     clearChecked: 'Limpiar marcados',
     sections: { produce: 'Verdulería / Frutas', protein: 'Proteínas', dairy: 'Lácteos', pantry: 'Almacén / Despensa' } as Record<Section, string>,
     unit: (n: number) => `${n} porción${n === 1 ? '' : 'es'}`,
+    previewTitle: 'Revisá tu lista',
+    previewSub: 'Marcá lo que ya tenés en casa para excluirlo.',
+    alreadyHave: 'Ya lo tengo',
+    fromPantry: 'De mi despensa',
+    managePantry: 'Mi despensa',
+    addFinal: 'Agregar a la lista',
+    pantryTitle: 'Mi despensa',
+    pantrySub: 'Alimentos básicos que siempre tenés. Se excluyen automáticamente de cada nueva lista.',
+    pantryEmpty: 'Todavía no guardaste alimentos.',
+    saveClose: 'Listo',
   } : {
     title: 'My week',
     sub: 'Plan 7 days of meals for your baby.',
@@ -260,7 +270,18 @@ export default function MyWeekScreen({
     clearChecked: 'Clear checked',
     sections: { produce: 'Produce', protein: 'Proteins', dairy: 'Dairy', pantry: 'Pantry' } as Record<Section, string>,
     unit: (n: number) => `${n} serving${n === 1 ? '' : 's'}`,
+    previewTitle: 'Review your list',
+    previewSub: 'Check off what you already have to exclude it.',
+    alreadyHave: 'I already have it',
+    fromPantry: 'From my pantry',
+    managePantry: 'My pantry',
+    addFinal: 'Add to shopping list',
+    pantryTitle: 'My pantry',
+    pantrySub: 'Staples you always have. They\u2019re auto-excluded from every new list.',
+    pantryEmpty: 'No staples saved yet.',
+    saveClose: 'Done',
   };
+
 
   const openOnboarding = () => {
     if (plan) {
