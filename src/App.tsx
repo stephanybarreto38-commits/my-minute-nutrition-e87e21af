@@ -168,6 +168,15 @@ export default function App() {
               babyMonths={babyMonths}
             />
           )}
+          {store.screen === 'my-week' && (
+            <MyWeekScreen
+              lang={store.lang}
+              currentMethod={store.method}
+              babyMonths={babyMonths}
+              userKey={store.userId ?? store.userEmail ?? 'guest'}
+              onMethodChange={store.setMethod}
+            />
+          )}
           {store.screen === 'admin' && store.isAdmin && (
             <AdminScreen
               lang={store.lang}
