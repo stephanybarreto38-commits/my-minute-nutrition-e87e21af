@@ -14,6 +14,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import MethodSheet from './components/MethodSheet';
 import FoodQuickModal from './components/FoodQuickModal';
 import WorldRecipesScreen from './screens/WorldRecipesScreen';
+import MyWeekScreen from './screens/MyWeekScreen';
 
 export default function App() {
   const store = useAppStore();
