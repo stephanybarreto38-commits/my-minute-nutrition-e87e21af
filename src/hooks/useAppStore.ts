@@ -108,6 +108,32 @@ export function useAppStore() {
     return () => sub.subscription.unsubscribe();
   }, [hydrate]);
 
+  // Persist + hydrate shopping list per user (localStorage).
+  const shoppingKey = `little_meal_shopping_${state.userId ?? state.userEmail ?? 'guest'}`;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(shoppingKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as ShoppingItem[];
+        // Backfill missing fields from older persisted shapes
+        const normalized = parsed.map(i => ({
+          ...i,
+          section: (i as Partial<ShoppingItem>).section ?? 'pantry',
+          quantity: (i as Partial<ShoppingItem>).quantity ?? 1,
+        })) as ShoppingItem[];
+        setState(s => ({ ...s, shoppingList: normalized }));
+      } else {
+        setState(s => ({ ...s, shoppingList: [] }));
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shoppingKey]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { window.localStorage.setItem(shoppingKey, JSON.stringify(state.shoppingList)); } catch { /* ignore */ }
+  }, [state.shoppingList, shoppingKey]);
+
   const setLang = useCallback((lang: Lang) => setState(s => ({ ...s, lang })), []);
 
   const setMethod = useCallback((method: FeedingMethod) => {
