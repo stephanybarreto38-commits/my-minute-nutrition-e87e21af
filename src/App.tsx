@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from './hooks/useAppStore';
 import { getFoodById } from './data/foods';
 import MilestoneToast from './components/MilestoneToast';
 import BottomNav from './components/BottomNav';
+import BabySwitcher from './components/BabySwitcher';
 import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -21,15 +22,42 @@ export default function App() {
   const [methodSheetOpen, setMethodSheetOpen] = useState(false);
   const [quickModalFoodId, setQuickModalFoodId] = useState<string | null>(null);
   const [milestone, setMilestone] = useState<{ foodId: string } | null>(null);
+  const [inviteFlash, setInviteFlash] = useState<string | null>(null);
 
   const handleLangToggle = () => store.setLang(store.lang === 'es' ? 'en' : 'es');
   const handleFoodClick = (foodId: string) => setQuickModalFoodId(foodId);
+  const handleAddBaby = () => store.navigateTo('onboarding');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get('invite');
+    const pending = fromUrl ?? sessionStorage.getItem('little_meal_pending_invite');
+    if (!pending) return;
+    if (fromUrl) sessionStorage.setItem('little_meal_pending_invite', fromUrl);
+    if (!store.userId) return;
+    (async () => {
+      const ok = await store.acceptInvite(pending);
+      if (ok) {
+        setInviteFlash(store.lang === 'es' ? '¡Invitación aceptada!' : 'Invitation accepted!');
+        setTimeout(() => setInviteFlash(null), 3000);
+      }
+      sessionStorage.removeItem('little_meal_pending_invite');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('invite');
+      window.history.replaceState({}, '', url.toString());
+    })();
+  }, [store.userId, store.acceptInvite, store.lang]);
 
   const babyMonths = store.getBabyAgeMonths();
   const babyWeek = store.baby.birthDate
     ? Math.max(0, Math.floor((Date.now() - new Date(store.baby.birthDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
     : 0;
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
+  const showBabySwitcher =
+    store.babies.length > 1 &&
+    store.screen !== 'login' &&
+    store.screen !== 'onboarding';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8">
