@@ -14,6 +14,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import MethodSheet from './components/MethodSheet';
 import FoodQuickModal from './components/FoodQuickModal';
 import WorldRecipesScreen from './screens/WorldRecipesScreen';
+import MyWeekScreen from './screens/MyWeekScreen';
 
 export default function App() {
   const store = useAppStore();
@@ -44,6 +45,7 @@ export default function App() {
           {store.screen !== 'onboarding' && store.screen !== 'login' && (() => {
             const NAV = [
               { screen: 'home' as const,          emoji: '🏠', label: store.lang === 'es' ? 'Inicio' : 'Home' },
+              { screen: 'my-week' as const,       emoji: '📅', label: store.lang === 'es' ? 'Mi semana' : 'My week' },
               { screen: 'world-recipes' as const,  emoji: '🌍', label: store.lang === 'es' ? 'Mundo' : 'World' },
               { screen: 'fridge' as const,         emoji: '🧊', label: store.lang === 'es' ? 'Nevera' : 'Fridge' },
               { screen: 'shopping' as const,       emoji: '🛒', label: store.lang === 'es' ? 'Compras' : 'Shopping' },
@@ -164,6 +166,15 @@ export default function App() {
             <WorldRecipesScreen
               lang={store.lang}
               babyMonths={babyMonths}
+            />
+          )}
+          {store.screen === 'my-week' && (
+            <MyWeekScreen
+              lang={store.lang}
+              currentMethod={store.method}
+              babyMonths={babyMonths}
+              userKey={store.userId ?? store.userEmail ?? 'guest'}
+              onMethodChange={store.setMethod}
             />
           )}
           {store.screen === 'admin' && store.isAdmin && (

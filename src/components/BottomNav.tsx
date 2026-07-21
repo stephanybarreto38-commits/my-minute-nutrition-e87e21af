@@ -11,8 +11,9 @@ interface Props {
 
 const NAV_ITEMS: { screen: Screen; emoji: string; labelKey: keyof typeof t['es']['nav'] }[] = [
   { screen: 'home',          emoji: '🏠', labelKey: 'home' },
-  { screen: 'shopping',      emoji: '🛒', labelKey: 'shopping' },
+  { screen: 'my-week',       emoji: '📅', labelKey: 'myWeek' },
   { screen: 'world-recipes', emoji: '🌍', labelKey: 'worldRecipes' },
+  { screen: 'shopping',      emoji: '🛒', labelKey: 'shopping' },
   { screen: 'profile',       emoji: '🐣', labelKey: 'profile' },
 ];
 
