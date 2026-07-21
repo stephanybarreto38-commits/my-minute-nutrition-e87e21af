@@ -5,6 +5,7 @@ export const t = {
     appName: 'Little Meal',
     nav: {
       home: 'Inicio',
+      myWeek: 'Mi semana',
       shopping: 'Compras',
       worldRecipes: 'Mundo',
       profile: 'Mia',
