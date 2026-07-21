@@ -419,6 +419,16 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
           onRandom={() => swapMeal(swapFor.day, swapFor.meal)}
           onClose={() => setSwapFor(null)}
         />
+      {showShopping && plan && (
+        <ShoppingSheet
+          lang={lang}
+          tx={tx}
+          plan={plan}
+          checked={checked}
+          onToggle={(id) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))}
+          onClearChecked={() => setChecked({})}
+          onClose={() => setShowShopping(false)}
+        />
       )}
     </div>
   );
