@@ -44,6 +44,7 @@ export default function App() {
           {store.screen !== 'onboarding' && store.screen !== 'login' && (() => {
             const NAV = [
               { screen: 'home' as const,          emoji: '🏠', label: store.lang === 'es' ? 'Inicio' : 'Home' },
+              { screen: 'my-week' as const,       emoji: '📅', label: store.lang === 'es' ? 'Mi semana' : 'My week' },
               { screen: 'world-recipes' as const,  emoji: '🌍', label: store.lang === 'es' ? 'Mundo' : 'World' },
               { screen: 'fridge' as const,         emoji: '🧊', label: store.lang === 'es' ? 'Nevera' : 'Fridge' },
               { screen: 'shopping' as const,       emoji: '🛒', label: store.lang === 'es' ? 'Compras' : 'Shopping' },
