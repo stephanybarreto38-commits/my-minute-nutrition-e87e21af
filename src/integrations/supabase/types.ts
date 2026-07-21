@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           birth_date: string
           created_at: string
+          id: string
           method: string
           name: string
           updated_at: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           birth_date: string
           created_at?: string
+          id?: string
           method: string
           name: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           birth_date?: string
           created_at?: string
+          id?: string
           method?: string
           name?: string
           updated_at?: string
@@ -41,26 +44,208 @@ export type Database = {
         }
         Relationships: []
       }
+      baby_shares: {
+        Row: {
+          baby_id: string
+          created_at: string
+          id: string
+          invited_email: string
+          invited_user_id: string | null
+          owner_id: string
+          role: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          id?: string
+          invited_email: string
+          invited_user_id?: string | null
+          owner_id: string
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          id?: string
+          invited_email?: string
+          invited_user_id?: string | null
+          owner_id?: string
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baby_shares_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pantry_items: {
+        Row: {
+          baby_id: string
+          created_at: string
+          food_key: string
+          id: string
+          name_en: string
+          name_es: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          food_key: string
+          id?: string
+          name_en: string
+          name_es: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          food_key?: string
+          id?: string
+          name_en?: string
+          name_es?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pantry_items_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          active_baby_id: string | null
           approved: boolean
           created_at: string
           email: string
           id: string
+          lang: string
+          updated_at: string
         }
         Insert: {
+          active_baby_id?: string | null
           approved?: boolean
           created_at?: string
           email: string
           id: string
+          lang?: string
+          updated_at?: string
         }
         Update: {
+          active_baby_id?: string | null
           approved?: boolean
           created_at?: string
           email?: string
           id?: string
+          lang?: string
+          updated_at?: string
         }
         Relationships: []
+      }
+      shopping_items: {
+        Row: {
+          baby_id: string
+          checked: boolean
+          created_at: string
+          id: string
+          name_en: string
+          name_es: string
+          quantity: number
+          section: string
+          source: string
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          baby_id: string
+          checked?: boolean
+          created_at?: string
+          id?: string
+          name_en: string
+          name_es: string
+          quantity?: number
+          section?: string
+          source?: string
+          tag?: string
+          updated_at?: string
+        }
+        Update: {
+          baby_id?: string
+          checked?: boolean
+          created_at?: string
+          id?: string
+          name_en?: string
+          name_es?: string
+          quantity?: number
+          section?: string
+          source?: string
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_items_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tried_foods: {
+        Row: {
+          baby_id: string
+          created_at: string
+          food_id: string
+          id: string
+          notes: string | null
+          reaction: string | null
+          tried_on: string
+          updated_at: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          food_id: string
+          id?: string
+          notes?: string | null
+          reaction?: string | null
+          tried_on?: string
+          updated_at?: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          food_id?: string
+          id?: string
+          notes?: string | null
+          reaction?: string | null
+          tried_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tried_foods_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -80,12 +265,50 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_plans: {
+        Row: {
+          baby_id: string
+          created_at: string
+          id: string
+          slots: Json
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          id?: string
+          slots?: Json
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          id?: string
+          slots?: Json
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_plans_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "baby_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_baby_access: {
+        Args: { _baby_id: string; _need_editor?: boolean; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
