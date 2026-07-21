@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import type { BabyProfile, BabyShare } from '../hooks/useAppStore';
 import type { Lang } from '../data/translations';
 
