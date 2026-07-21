@@ -159,15 +159,35 @@ export function useAppStore() {
     }));
   }, []);
 
-  const addToShoppingList = useCallback((items: Omit<ShoppingItem, 'id' | 'checked'>[]) => {
+  const addToShoppingList = useCallback((items: ShoppingInput[]) => {
     setState(s => {
-      const existing = new Set(s.shoppingList.map(i => i.nameEs));
-      const newItems: ShoppingItem[] = items
-        .filter(i => !existing.has(i.nameEs))
-        .map(i => ({ ...i, id: `sl-${Date.now()}-${Math.random()}`, checked: false }));
-      return { ...s, shoppingList: [...s.shoppingList, ...newItems] };
+      const next = [...s.shoppingList];
+      for (const raw of items) {
+        const qty = raw.quantity ?? 1;
+        const section = raw.section ?? 'pantry';
+        const idx = next.findIndex(i => i.nameEs.trim().toLowerCase() === raw.nameEs.trim().toLowerCase());
+        if (idx >= 0) {
+          next[idx] = { ...next[idx], quantity: next[idx].quantity + qty };
+        } else {
+          next.push({
+            id: `sl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            nameEs: raw.nameEs,
+            nameEn: raw.nameEn,
+            tag: raw.tag,
+            section,
+            quantity: qty,
+            checked: false,
+          });
+        }
+      }
+      return { ...s, shoppingList: next };
     });
   }, []);
+
+  const addWeekToShoppingList = useCallback((items: ShoppingInput[]) => {
+    // Same merge semantics; wrapper so callers can express intent.
+    addToShoppingList(items);
+  }, [addToShoppingList]);
 
   const toggleShoppingItem = useCallback((id: string) => {
     setState(s => ({
