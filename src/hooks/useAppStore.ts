@@ -1,14 +1,18 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Lang } from '../data/translations';
 import type { Reaction, FoodLog } from '../data/foods';
+import { FOODS } from '../data/foods';
 
 export type FeedingMethod = 'BLW' | 'BLISS' | 'Purés';
 export type Screen = 'login' | 'onboarding' | 'home' | 'food-detail' | 'shopping' | 'fridge' | 'profile' | 'world-recipes' | 'admin' | 'my-week';
 
 export interface BabyProfile {
+  id: string;
   name: string;
   birthDate: string;
+  method: FeedingMethod;
+  ownerId: string;
 }
 
 export type ShoppingSection = 'produce' | 'protein' | 'dairy' | 'pantry';
@@ -28,252 +32,385 @@ export type ShoppingInput = Omit<ShoppingItem, 'id' | 'checked' | 'section' | 'q
   quantity?: number;
 };
 
+export interface BabyShare {
+  id: string;
+  babyId: string;
+  invitedEmail: string;
+  role: 'viewer' | 'editor';
+  status: 'pending' | 'accepted' | 'revoked';
+  token: string;
+}
+
 interface AppState {
   lang: Lang;
-  method: FeedingMethod;
   screen: Screen;
   selectedFoodId: string | null;
-  baby: BabyProfile;
+  babies: BabyProfile[];
+  activeBabyId: string | null;
   foodLogs: Record<string, FoodLog>;
   shoppingList: ShoppingItem[];
+  pantry: Set<string>;
+  weekPlanBlob: unknown | null;
   ageFilter: 6 | 8 | 12;
   userEmail: string | null;
   userId: string | null;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 const INITIAL_STATE: AppState = {
   lang: 'es',
-  method: 'BLW',
   screen: 'login',
   selectedFoodId: null,
-  baby: { name: '', birthDate: '' },
+  babies: [],
+  activeBabyId: null,
   foodLogs: {},
   shoppingList: [],
+  pantry: new Set(),
+  weekPlanBlob: null,
   ageFilter: 6,
   userEmail: null,
   userId: null,
   isAdmin: false,
+  loading: false,
 };
+
+const EMPTY_BABY: BabyProfile = { id: '', name: '', birthDate: '', method: 'BLW', ownerId: '' };
+
+function currentMonday(): string {
+  const d = new Date();
+  const day = d.getDay(); // 0=Sun
+  const diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
 
 export function useAppStore() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
+  const lastLoadedBabyRef = useRef<string | null>(null);
 
+  const activeBaby: BabyProfile = state.babies.find(b => b.id === state.activeBabyId) ?? EMPTY_BABY;
+
+  // ─── Hydrate on auth change ──────────────────────────────────────
   const hydrate = useCallback(async (email: string, userId: string) => {
-    const [{ data: roles }, { data: babyRow }] = await Promise.all([
+    const [{ data: roles }, { data: profile }, { data: babyRows }] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase
-        .from('baby_profiles')
-        .select('name, birth_date, method')
-        .eq('user_id', userId)
-        .maybeSingle(),
+      supabase.from('profiles').select('active_baby_id, lang').eq('id', userId).maybeSingle() as any,
+      supabase.from('baby_profiles').select('id, user_id, name, birth_date, method').order('created_at', { ascending: true }),
     ]);
+
     const isAdmin = (roles ?? []).some(r => r.role === 'admin');
-    setState(s => {
-      const hasBaby = !!babyRow;
-      return {
-        ...s,
-        userEmail: email,
-        userId,
-        isAdmin,
-        baby: hasBaby
-          ? { name: babyRow!.name, birthDate: babyRow!.birth_date }
-          : s.baby,
-        method: hasBaby ? (babyRow!.method as FeedingMethod) : s.method,
-        screen:
-          s.screen === 'login' || s.screen === 'onboarding'
-            ? hasBaby
-              ? 'home'
-              : 'onboarding'
-            : s.screen,
-      };
-    });
+    const babies: BabyProfile[] = (babyRows ?? []).map((b: any) => ({
+      id: b.id, name: b.name, birthDate: b.birth_date, method: b.method as FeedingMethod, ownerId: b.user_id,
+    }));
+
+    let activeId: string | null = profile?.active_baby_id ?? null;
+    if (activeId && !babies.find(b => b.id === activeId)) activeId = null;
+    if (!activeId && babies.length > 0) activeId = babies[0].id;
+
+    setState(s => ({
+      ...s,
+      userEmail: email,
+      userId,
+      isAdmin,
+      lang: (profile?.lang as Lang) ?? s.lang,
+      babies,
+      activeBabyId: activeId,
+      screen:
+        s.screen === 'login'
+          ? babies.length === 0 ? 'onboarding' : 'home'
+          : s.screen,
+    }));
   }, []);
 
   useEffect(() => {
-    // Listen first, then get current session
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
-        setState(s => ({ ...s, userEmail: null, userId: null, isAdmin: false, screen: 'login' }));
+        setState({ ...INITIAL_STATE });
         return;
       }
       const u = session.user;
       if (u.email) void hydrate(u.email, u.id);
     });
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user?.email) {
-        void hydrate(data.session.user.email, data.session.user.id);
-      }
+      if (data.session?.user?.email) void hydrate(data.session.user.email, data.session.user.id);
     });
     return () => sub.subscription.unsubscribe();
   }, [hydrate]);
 
-  // Persist + hydrate shopping list per user (localStorage).
-  const shoppingKey = `little_meal_shopping_${state.userId ?? state.userEmail ?? 'guest'}`;
+  // ─── Load per-baby data when active baby changes ─────────────────
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = window.localStorage.getItem(shoppingKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as ShoppingItem[];
-        // Backfill missing fields from older persisted shapes
-        const normalized = parsed.map(i => ({
-          ...i,
-          section: (i as Partial<ShoppingItem>).section ?? 'pantry',
-          quantity: (i as Partial<ShoppingItem>).quantity ?? 1,
-        })) as ShoppingItem[];
-        setState(s => ({ ...s, shoppingList: normalized }));
-      } else {
-        setState(s => ({ ...s, shoppingList: [] }));
-      }
-    } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shoppingKey]);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try { window.localStorage.setItem(shoppingKey, JSON.stringify(state.shoppingList)); } catch { /* ignore */ }
-  }, [state.shoppingList, shoppingKey]);
+    if (!state.activeBabyId || !state.userId) return;
+    if (lastLoadedBabyRef.current === state.activeBabyId) return;
+    lastLoadedBabyRef.current = state.activeBabyId;
 
-  const setLang = useCallback((lang: Lang) => setState(s => ({ ...s, lang })), []);
+    const bid = state.activeBabyId;
+    (async () => {
+      const [{ data: shop }, { data: pant }, { data: tried }, { data: plan }] = await Promise.all([
+        supabase.from('shopping_items').select('*').eq('baby_id', bid).order('created_at'),
+        supabase.from('pantry_items').select('food_key').eq('baby_id', bid),
+        supabase.from('tried_foods').select('food_id, reaction, notes, tried_on').eq('baby_id', bid),
+        supabase.from('weekly_plans').select('slots, week_start').eq('baby_id', bid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+
+      const shoppingList: ShoppingItem[] = (shop ?? []).map((r: any) => ({
+        id: r.id, nameEs: r.name_es, nameEn: r.name_en, tag: r.tag, section: r.section,
+        quantity: r.quantity, checked: r.checked,
+      }));
+      const pantry = new Set<string>((pant ?? []).map((r: any) => r.food_key));
+      const foodLogs: Record<string, FoodLog> = {};
+      for (const r of (tried ?? []) as any[]) {
+        foodLogs[r.food_id] = {
+          foodId: r.food_id,
+          tried: true,
+          reaction: (r.reaction as Reaction) ?? null,
+          notes: r.notes ?? '',
+          date: r.tried_on ?? new Date().toISOString().slice(0, 10),
+        };
+      }
+      setState(s => ({ ...s, shoppingList, pantry, foodLogs, weekPlanBlob: (plan as any)?.slots ?? null }));
+    })();
+  }, [state.activeBabyId, state.userId]);
+
+  // ─── Basic setters ───────────────────────────────────────────────
+  const setLang = useCallback((lang: Lang) => {
+    setState(s => {
+      if (s.userId) void supabase.from('profiles').update({ lang }).eq('id', s.userId);
+      return { ...s, lang };
+    });
+  }, []);
 
   const setMethod = useCallback((method: FeedingMethod) => {
     setState(s => {
-      if (s.userId && s.baby.name) {
-        void supabase
-          .from('baby_profiles')
-          .update({ method })
-          .eq('user_id', s.userId);
+      if (s.activeBabyId) {
+        void supabase.from('baby_profiles').update({ method }).eq('id', s.activeBabyId);
       }
-      return { ...s, method };
+      return {
+        ...s,
+        babies: s.babies.map(b => b.id === s.activeBabyId ? { ...b, method } : b),
+      };
     });
   }, []);
 
   const navigateTo = useCallback((screen: Screen, foodId?: string) => {
     setState(s => ({ ...s, screen, selectedFoodId: foodId ?? s.selectedFoodId }));
   }, []);
+
   const setAgeFilter = useCallback((age: 6 | 8 | 12) => setState(s => ({ ...s, ageFilter: age })), []);
 
-  const saveLog = useCallback((foodId: string, log: Partial<FoodLog>) => {
-    setState(s => ({
-      ...s,
-      foodLogs: {
-        ...s.foodLogs,
-        [foodId]: {
-          foodId,
-          tried: log.tried ?? false,
-          reaction: log.reaction ?? null,
-          notes: log.notes ?? '',
-          date: log.date ?? new Date().toISOString().split('T')[0],
-        },
-      },
-    }));
+  // ─── Babies ──────────────────────────────────────────────────────
+  const addBaby = useCallback(async (name: string, birthDate: string, method: FeedingMethod) => {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user?.id;
+    if (!uid) return null;
+    const { data, error } = await supabase.from('baby_profiles')
+      .insert({ user_id: uid, name, birth_date: birthDate, method })
+      .select('id, user_id, name, birth_date, method').single();
+    if (error || !data) return null;
+    const b: BabyProfile = { id: data.id, name: data.name, birthDate: data.birth_date, method: data.method as FeedingMethod, ownerId: data.user_id };
+    await supabase.from('profiles').update({ active_baby_id: b.id }).eq('id', uid);
+    lastLoadedBabyRef.current = null;
+    setState(s => ({ ...s, babies: [...s.babies, b], activeBabyId: b.id, screen: 'home' }));
+    return b;
   }, []);
+
+  const completeOnboarding = useCallback(async (name: string, birthDate: string, method: FeedingMethod) => {
+    await addBaby(name, birthDate, method);
+  }, [addBaby]);
+
+  const setActiveBaby = useCallback(async (babyId: string) => {
+    if (!state.userId) return;
+    await supabase.from('profiles').update({ active_baby_id: babyId }).eq('id', state.userId);
+    lastLoadedBabyRef.current = null;
+    setState(s => ({ ...s, activeBabyId: babyId }));
+  }, [state.userId]);
+
+  // ─── Food logs / tried ───────────────────────────────────────────
+  const persistTried = useCallback(async (log: FoodLog) => {
+    const bid = state.activeBabyId;
+    if (!bid) return;
+    await supabase.from('tried_foods').upsert({
+      baby_id: bid, food_id: log.foodId, reaction: log.reaction, notes: log.notes, tried_on: log.date,
+    }, { onConflict: 'baby_id,food_id' });
+  }, [state.activeBabyId]);
+
+  const saveLog = useCallback((foodId: string, log: Partial<FoodLog>) => {
+    const full: FoodLog = {
+      foodId,
+      tried: log.tried ?? false,
+      reaction: log.reaction ?? null,
+      notes: log.notes ?? '',
+      date: log.date ?? new Date().toISOString().slice(0, 10),
+    };
+    setState(s => ({ ...s, foodLogs: { ...s.foodLogs, [foodId]: full } }));
+    if (full.tried) void persistTried(full);
+  }, [persistTried]);
 
   const quickLog = useCallback((foodId: string, reaction: Reaction) => {
-    setState(s => ({
-      ...s,
-      foodLogs: {
-        ...s.foodLogs,
-        [foodId]: {
-          foodId,
-          tried: true,
-          reaction,
-          notes: '',
-          date: new Date().toISOString().split('T')[0],
-        },
-      },
-    }));
-  }, []);
+    const full: FoodLog = { foodId, tried: true, reaction, notes: '', date: new Date().toISOString().slice(0, 10) };
+    setState(s => ({ ...s, foodLogs: { ...s.foodLogs, [foodId]: full } }));
+    void persistTried(full);
+  }, [persistTried]);
 
+  // ─── Shopping ────────────────────────────────────────────────────
   const addToShoppingList = useCallback((items: ShoppingInput[]) => {
+    const bid = state.activeBabyId;
+    if (!bid) return;
     setState(s => {
       const next = [...s.shoppingList];
+      const inserts: any[] = [];
+      const updates: { id: string; quantity: number }[] = [];
       for (const raw of items) {
         const qty = raw.quantity ?? 1;
         const section = raw.section ?? 'pantry';
         const idx = next.findIndex(i => i.nameEs.trim().toLowerCase() === raw.nameEs.trim().toLowerCase());
         if (idx >= 0) {
-          next[idx] = { ...next[idx], quantity: next[idx].quantity + qty };
+          const merged = { ...next[idx], quantity: next[idx].quantity + qty };
+          next[idx] = merged;
+          updates.push({ id: merged.id, quantity: merged.quantity });
         } else {
-          next.push({
-            id: `sl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            nameEs: raw.nameEs,
-            nameEn: raw.nameEn,
-            tag: raw.tag,
-            section,
-            quantity: qty,
-            checked: false,
-          });
+          const tempId = `sl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+          next.push({ id: tempId, nameEs: raw.nameEs, nameEn: raw.nameEn, tag: raw.tag, section, quantity: qty, checked: false });
+          inserts.push({ baby_id: bid, name_es: raw.nameEs, name_en: raw.nameEn, tag: raw.tag, section, quantity: qty });
         }
       }
+      (async () => {
+        for (const u of updates) await supabase.from('shopping_items').update({ quantity: u.quantity }).eq('id', u.id);
+        if (inserts.length) {
+          const { data } = await supabase.from('shopping_items').insert(inserts).select('*');
+          if (data) {
+            setState(cur => {
+              const list = [...cur.shoppingList];
+              // Replace temp entries by name match with real DB rows (best-effort)
+              for (const row of data as any[]) {
+                const idx = list.findIndex(i => i.nameEs === row.name_es && i.id.startsWith('sl-'));
+                if (idx >= 0) list[idx] = {
+                  id: row.id, nameEs: row.name_es, nameEn: row.name_en, tag: row.tag,
+                  section: row.section, quantity: row.quantity, checked: row.checked,
+                };
+              }
+              return { ...cur, shoppingList: list };
+            });
+          }
+        }
+      })();
+      return { ...s, shoppingList: next };
+    });
+  }, [state.activeBabyId]);
+
+  const addWeekToShoppingList = addToShoppingList;
+
+  const toggleShoppingItem = useCallback((id: string) => {
+    setState(s => {
+      const next = s.shoppingList.map(i => i.id === id ? { ...i, checked: !i.checked } : i);
+      const item = next.find(i => i.id === id);
+      if (item) void supabase.from('shopping_items').update({ checked: item.checked }).eq('id', id);
       return { ...s, shoppingList: next };
     });
   }, []);
 
-  const addWeekToShoppingList = useCallback((items: ShoppingInput[]) => {
-    // Same merge semantics; wrapper so callers can express intent.
-    addToShoppingList(items);
-  }, [addToShoppingList]);
+  const clearCheckedItems = useCallback(() => {
+    setState(s => {
+      const remove = s.shoppingList.filter(i => i.checked).map(i => i.id);
+      if (remove.length) void supabase.from('shopping_items').delete().in('id', remove);
+      return { ...s, shoppingList: s.shoppingList.filter(i => !i.checked) };
+    });
+  }, []);
 
-  const toggleShoppingItem = useCallback((id: string) => {
-    setState(s => ({
-      ...s,
-      shoppingList: s.shoppingList.map(item =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      ),
+  // ─── Pantry ──────────────────────────────────────────────────────
+  const togglePantry = useCallback((foodKey: string) => {
+    const bid = state.activeBabyId;
+    if (!bid) return;
+    const food = FOODS.find(f => f.id === foodKey);
+    setState(s => {
+      const next = new Set(s.pantry);
+      if (next.has(foodKey)) {
+        next.delete(foodKey);
+        void supabase.from('pantry_items').delete().eq('baby_id', bid).eq('food_key', foodKey);
+      } else {
+        next.add(foodKey);
+        void supabase.from('pantry_items').insert({
+          baby_id: bid, food_key: foodKey,
+          name_es: food?.nameEs ?? foodKey, name_en: food?.nameEn ?? foodKey,
+        });
+      }
+      return { ...s, pantry: next };
+    });
+  }, [state.activeBabyId]);
+
+  // ─── Weekly plan (blob) ──────────────────────────────────────────
+  const saveWeekPlan = useCallback((plan: unknown) => {
+    const bid = state.activeBabyId;
+    if (!bid) return;
+    setState(s => ({ ...s, weekPlanBlob: plan }));
+    void supabase.from('weekly_plans').upsert(
+      { baby_id: bid, week_start: currentMonday(), slots: plan as any, updated_at: new Date().toISOString() },
+      { onConflict: 'baby_id,week_start' }
+    );
+  }, [state.activeBabyId]);
+
+  // ─── Sharing ─────────────────────────────────────────────────────
+  const shareBaby = useCallback(async (babyId: string, email: string, role: 'viewer' | 'editor') => {
+    if (!state.userId) return null;
+    const { data, error } = await supabase.from('baby_shares')
+      .insert({ baby_id: babyId, owner_id: state.userId, invited_email: email.trim().toLowerCase(), role })
+      .select('*').single();
+    if (error || !data) return null;
+    return data as any as { id: string; token: string };
+  }, [state.userId]);
+
+  const listShares = useCallback(async (babyId: string): Promise<BabyShare[]> => {
+    const { data } = await supabase.from('baby_shares').select('*').eq('baby_id', babyId);
+    return (data ?? []).map((r: any) => ({
+      id: r.id, babyId: r.baby_id, invitedEmail: r.invited_email,
+      role: r.role, status: r.status, token: r.token,
     }));
   }, []);
 
-  const clearCheckedItems = useCallback(() => {
-    setState(s => ({ ...s, shoppingList: s.shoppingList.filter(i => !i.checked) }));
+  const revokeShare = useCallback(async (shareId: string) => {
+    await supabase.from('baby_shares').delete().eq('id', shareId);
   }, []);
 
-  const completeOnboarding = useCallback(async (name: string, birthDate: string, method: FeedingMethod) => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const uid = sessionData.session?.user?.id;
-    if (uid) {
-      await supabase.from('baby_profiles').upsert(
-        { user_id: uid, name, birth_date: birthDate, method },
-        { onConflict: 'user_id' }
-      );
+  const acceptInvite = useCallback(async (token: string) => {
+    if (!state.userId) return false;
+    const { data } = await supabase.from('baby_shares')
+      .update({ invited_user_id: state.userId, status: 'accepted' })
+      .eq('token', token).eq('status', 'pending')
+      .select('*').maybeSingle();
+    if (data) {
+      // Reload babies
+      lastLoadedBabyRef.current = null;
+      if (state.userEmail) await hydrate(state.userEmail, state.userId);
+      return true;
     }
-    setState(s => ({ ...s, baby: { name, birthDate }, method, screen: 'home' }));
-  }, []);
+    return false;
+  }, [state.userId, state.userEmail, hydrate]);
 
+  // ─── Auth ────────────────────────────────────────────────────────
   const loginUser = useCallback((email: string) => {
-    // Session listener will hydrate isAdmin + set screen to onboarding
-    setState(s => ({ ...s, userEmail: email, screen: 'onboarding' }));
+    setState(s => ({ ...s, userEmail: email }));
   }, []);
 
   const logoutUser = useCallback(async () => {
     await supabase.auth.signOut();
-    setState(s => ({
-      ...s,
-      userEmail: null,
-      userId: null,
-      isAdmin: false,
-      screen: 'login',
-      baby: { name: '', birthDate: '' },
-      foodLogs: {},
-      shoppingList: [],
-    }));
+    setState({ ...INITIAL_STATE });
   }, []);
 
-  const triedFoodIds = Object.keys(state.foodLogs).filter(
-    id => state.foodLogs[id].tried
-  );
+  // ─── Derived ─────────────────────────────────────────────────────
+  const triedFoodIds = Object.keys(state.foodLogs).filter(id => state.foodLogs[id].tried);
 
   const getBabyAgeMonths = () => {
-    if (!state.baby.birthDate) return 0;
-    const birth = new Date(state.baby.birthDate);
+    if (!activeBaby.birthDate) return 0;
+    const birth = new Date(activeBaby.birthDate);
     const now = new Date();
-    const months = (now.getFullYear() - birth.getFullYear()) * 12
-      + now.getMonth() - birth.getMonth();
-    return months;
+    return (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
   };
 
   return {
     ...state,
+    baby: activeBaby, // backward-compat: exposes { id, name, birthDate, method, ownerId }
+    activeBaby,
+    method: activeBaby.method,
     setLang,
     setMethod,
     navigateTo,
@@ -284,9 +421,17 @@ export function useAppStore() {
     addWeekToShoppingList,
     toggleShoppingItem,
     clearCheckedItems,
+    togglePantry,
+    saveWeekPlan,
     triedFoodIds,
     getBabyAgeMonths,
     completeOnboarding,
+    addBaby,
+    setActiveBaby,
+    shareBaby,
+    listShares,
+    revokeShare,
+    acceptInvite,
     loginUser,
     logoutUser,
   };
