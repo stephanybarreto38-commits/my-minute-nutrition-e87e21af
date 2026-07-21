@@ -3,7 +3,7 @@ import type { Food, FoodLog, Reaction } from '../data/foods';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import type { FeedingMethod } from '../hooks/useAppStore';
-import type { ShoppingItem } from '../hooks/useAppStore';
+import type { ShoppingInput, ShoppingSection } from '../hooks/useAppStore';
 import { getRecipesByFoodId } from '../data/recipes';
 
 interface Props {
