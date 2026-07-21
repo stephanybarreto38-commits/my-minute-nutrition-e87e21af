@@ -48,8 +48,14 @@ export default function FoodDetailScreen({
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const babySection: ShoppingSection = (() => {
+    if (food.category === 'fruits' || food.category === 'vegetables') return 'produce';
+    if (food.category === 'proteins') return 'protein';
+    return 'pantry';
+  })();
+
   const handleAddToShopping = () => {
-    onAddToShopping([{ nameEs: food.nameEs, nameEn: food.nameEn, tag: 'baby' }]);
+    onAddToShopping([{ nameEs: food.nameEs, nameEn: food.nameEn, tag: 'baby', section: babySection, quantity: 1 }]);
   };
 
   const TABS: { id: Tab; label: string }[] = [
