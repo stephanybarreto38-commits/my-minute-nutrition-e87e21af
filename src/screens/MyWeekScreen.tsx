@@ -120,7 +120,7 @@ function foodSection(foodId: string): Section {
   const f = FOODS.find(x => x.id === foodId);
   if (!f) return 'pantry';
   if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
-  if (f.category === 'proteins') return 'proteins';
+  if (f.category === 'protein') return 'protein';
   return 'pantry';
 }
 
@@ -138,7 +138,7 @@ function buildShoppingList(plan: WeekPlan): Record<Section, ShoppingItem[]> {
       }
     }
   }
-  const groups: Record<Section, ShoppingItem[]> = { produce: [], proteins: [], dairy: [], pantry: [] };
+  const groups: Record<Section, ShoppingItem[]> = { produce: [], protein: [], dairy: [], pantry: [] };
   for (const [foodId, count] of counts.entries()) {
     const section = foodSection(foodId);
     groups[section].push({ foodId, count, section });
@@ -217,7 +217,7 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
     shoppingTitle: 'Lista de compras de la semana',
     shoppingEmpty: 'Todavía no hay ingredientes.',
     clearChecked: 'Limpiar marcados',
-    sections: { produce: 'Verdulería / Frutas', proteins: 'Proteínas', dairy: 'Lácteos', pantry: 'Almacén / Despensa' } as Record<Section, string>,
+    sections: { produce: 'Verdulería / Frutas', protein: 'Proteínas', dairy: 'Lácteos', pantry: 'Almacén / Despensa' } as Record<Section, string>,
     unit: (n: number) => `${n} porción${n === 1 ? '' : 'es'}`,
   } : {
     title: 'My week',
@@ -240,7 +240,7 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
     shoppingTitle: 'This week\u2019s shopping list',
     shoppingEmpty: 'No ingredients yet.',
     clearChecked: 'Clear checked',
-    sections: { produce: 'Produce', proteins: 'Proteins', dairy: 'Dairy', pantry: 'Pantry' } as Record<Section, string>,
+    sections: { produce: 'Produce', protein: 'Proteins', dairy: 'Dairy', pantry: 'Pantry' } as Record<Section, string>,
     unit: (n: number) => `${n} serving${n === 1 ? '' : 's'}`,
   };
 
@@ -603,7 +603,7 @@ function ShoppingSheet(props: {
 }) {
   const { lang, tx, plan, checked, onToggle, onClearChecked, onClose } = props;
   const groups = useMemo(() => buildShoppingList(plan), [plan]);
-  const orderedSections: Section[] = ['produce', 'proteins', 'dairy', 'pantry'];
+  const orderedSections: Section[] = ['produce', 'protein', 'dairy', 'pantry'];
   const anyItems = orderedSections.some(s => groups[s].length > 0);
   const hasChecked = Object.values(checked).some(Boolean);
 
