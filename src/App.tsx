@@ -174,7 +174,10 @@ export default function App() {
               lang={store.lang}
               currentMethod={store.method}
               babyMonths={babyMonths}
-              userKey={store.userId ?? store.userEmail ?? 'guest'}
+              savedPlan={store.weekPlanBlob}
+              onSavePlan={store.saveWeekPlan}
+              pantry={store.pantry}
+              onTogglePantry={store.togglePantry}
               onMethodChange={store.setMethod}
               onAddToShopping={store.addWeekToShoppingList}
               onGoToShopping={() => store.navigateTo('shopping')}
