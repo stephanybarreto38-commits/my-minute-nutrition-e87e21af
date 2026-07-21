@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import type { Lang } from '../data/translations';
 
 interface Props {
@@ -12,24 +13,14 @@ type Mode = 'login' | 'register';
 
 const ensureAccessRequest = async (userId: string, userEmail: string) => {
   const normalizedEmail = userEmail.trim().toLowerCase();
-
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .upsert(
-      { id: userId, email: normalizedEmail, approved: false },
-      { onConflict: 'id', ignoreDuplicates: true },
-    );
-
-  if (profileError) throw profileError;
-
-  const { error: roleError } = await supabase
-    .from('user_roles')
-    .upsert(
-      { user_id: userId, role: 'user' },
-      { onConflict: 'user_id,role', ignoreDuplicates: true },
-    );
-
-  if (roleError) throw roleError;
+  await supabase.from('profiles').upsert(
+    { id: userId, email: normalizedEmail, approved: false },
+    { onConflict: 'id', ignoreDuplicates: true },
+  );
+  await supabase.from('user_roles').upsert(
+    { user_id: userId, role: 'user' },
+    { onConflict: 'user_id,role', ignoreDuplicates: true },
+  );
 };
 
 export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
@@ -40,86 +31,74 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialBusy, setSocialBusy] = useState<'google' | 'apple' | null>(null);
 
   const isEs = lang === 'es';
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
+  // Preserve invite token across OAuth redirect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const invite = params.get('invite');
+    if (invite) sessionStorage.setItem('little_meal_pending_invite', invite);
+  }, []);
+
+  const handleSocial = async (provider: 'google' | 'apple') => {
+    setSocialBusy(provider);
+    setError('');
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setError(result.error instanceof Error ? result.error.message : String(result.error));
+        setSocialBusy(null);
+        return;
+      }
+      if ('redirected' in result && result.redirected) return; // browser navigates away
+      // Session set inline (popup path)
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess.session?.user?.email) onLogin(sess.session.user.email);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setSocialBusy(null);
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
     setPending(false);
-
-    if (!isValidEmail(email)) {
-      setError(isEs ? 'Ingresa un correo válido.' : 'Enter a valid email.');
-      return;
-    }
-    if (password.length < 6) {
-      setError(isEs ? 'La contraseña debe tener al menos 6 caracteres.' : 'Password must be at least 6 characters.');
-      return;
-    }
+    if (!isValidEmail(email)) { setError(isEs ? 'Ingresa un correo válido.' : 'Enter a valid email.'); return; }
+    if (password.length < 6) { setError(isEs ? 'Mínimo 6 caracteres.' : 'At least 6 characters.'); return; }
     if (mode === 'register' && password !== confirmPassword) {
       setError(isEs ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
       return;
     }
-
     setLoading(true);
-
     try {
       const normalizedEmail = email.trim().toLowerCase();
-
       if (mode === 'register') {
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password,
+          email: normalizedEmail, password,
           options: { emailRedirectTo: window.location.origin },
         });
-        if (signUpError) {
-          setError(signUpError.message);
-          setLoading(false);
-          return;
-        }
-        // Check if approved (admin auto-approves)
+        if (signUpError) { setError(signUpError.message); setLoading(false); return; }
         const userId = data.user?.id;
         if (userId) {
           await ensureAccessRequest(userId, normalizedEmail);
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('approved')
-            .eq('id', userId)
-            .maybeSingle();
-          if (profile?.approved) {
-            onLogin(email);
-            return;
-          }
+          const { data: profile } = await supabase.from('profiles').select('approved').eq('id', userId).maybeSingle();
+          if (profile?.approved) { onLogin(email); return; }
         }
-        // Not approved → sign out and show pending
         await supabase.auth.signOut();
-        setPending(true);
-        setLoading(false);
+        setPending(true); setLoading(false);
       } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
-        if (signInError) {
-          setError(isEs ? 'Correo o contraseña incorrectos.' : 'Incorrect email or password.');
-          setLoading(false);
-          return;
-        }
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        if (signInError) { setError(isEs ? 'Correo o contraseña incorrectos.' : 'Incorrect email or password.'); setLoading(false); return; }
         const userId = data.user?.id;
-        if (userId) {
-          await ensureAccessRequest(userId, normalizedEmail);
-        }
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('approved')
-          .eq('id', userId!)
-          .maybeSingle();
-        if (!profile?.approved) {
-          await supabase.auth.signOut();
-          setPending(true);
-          setLoading(false);
-          return;
-        }
+        if (userId) await ensureAccessRequest(userId, normalizedEmail);
+        const { data: profile } = await supabase.from('profiles').select('approved').eq('id', userId!).maybeSingle();
+        if (!profile?.approved) { await supabase.auth.signOut(); setPending(true); setLoading(false); return; }
         onLogin(email);
       }
     } catch (err) {
@@ -133,19 +112,12 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
           <div className="text-5xl mb-3">⏳</div>
-          <h2 className="text-lg font-bold text-gray-900">
-            {isEs ? 'Solicitud enviada' : 'Request sent'}
-          </h2>
+          <h2 className="text-lg font-bold text-gray-900">{isEs ? 'Solicitud enviada' : 'Request sent'}</h2>
           <p className="text-sm text-gray-600 mt-2 leading-snug">
-            {isEs
-              ? 'Tu cuenta está pendiente de aprobación. La administradora activará tu acceso pronto.'
-              : 'Your account is pending approval. The admin will activate your access soon.'}
+            {isEs ? 'Tu cuenta está pendiente de aprobación.' : 'Your account is pending approval.'}
           </p>
           <p className="text-xs text-gray-400 mt-3">{email}</p>
-          <button
-            onClick={() => { setPending(false); setMode('login'); }}
-            className="mt-6 text-sm text-green-600 font-medium"
-          >
+          <button onClick={() => { setPending(false); setMode('login'); }} className="mt-6 text-sm text-green-600 font-medium">
             {isEs ? '← Volver al inicio' : '← Back to sign in'}
           </button>
         </div>
@@ -156,10 +128,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col items-center px-6 py-8">
       <div className="w-full max-w-sm flex justify-end mb-4">
-        <button
-          onClick={onToggleLang}
-          className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm"
-        >
+        <button onClick={onToggleLang} className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
           <span className={lang === 'es' ? 'text-green-600 font-semibold' : ''}>ES</span>
           <span className="mx-1 text-gray-300">/</span>
           <span className={lang === 'en' ? 'text-green-600 font-semibold' : ''}>EN</span>
@@ -174,21 +143,37 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
         </p>
       </div>
 
-      <div className="w-full max-w-sm bg-gray-100 rounded-xl p-1 flex mb-4">
+      {/* Social auth */}
+      <div className="w-full max-w-sm space-y-2 mb-4">
         <button
-          onClick={() => { setMode('login'); setError(''); }}
-          className={`flex-1 py-2 text-sm rounded-lg font-medium transition-all ${
-            mode === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-          }`}
+          onClick={() => handleSocial('google')}
+          disabled={!!socialBusy}
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-60 text-gray-800 font-medium py-2.5 rounded-xl text-sm"
         >
-          {isEs ? 'Ingresar' : 'Sign in'}
+          <span>🔵</span> {socialBusy === 'google' ? '...' : (isEs ? 'Continuar con Google' : 'Continue with Google')}
         </button>
         <button
-          onClick={() => { setMode('register'); setError(''); }}
-          className={`flex-1 py-2 text-sm rounded-lg font-medium transition-all ${
-            mode === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-          }`}
+          onClick={() => handleSocial('apple')}
+          disabled={!!socialBusy}
+          className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-900 disabled:opacity-60 font-medium py-2.5 rounded-xl text-sm"
         >
+          <span></span> {socialBusy === 'apple' ? '...' : (isEs ? 'Continuar con Apple' : 'Continue with Apple')}
+        </button>
+      </div>
+
+      <div className="w-full max-w-sm flex items-center gap-2 mb-4">
+        <div className="flex-1 h-px bg-gray-200" />
+        <span className="text-[10px] uppercase text-gray-400 tracking-wide">{isEs ? 'o con correo' : 'or with email'}</span>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
+
+      <div className="w-full max-w-sm bg-gray-100 rounded-xl p-1 flex mb-4">
+        <button onClick={() => { setMode('login'); setError(''); }}
+          className={`flex-1 py-2 text-sm rounded-lg font-medium transition-all ${mode === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
+          {isEs ? 'Ingresar' : 'Sign in'}
+        </button>
+        <button onClick={() => { setMode('register'); setError(''); }}
+          className={`flex-1 py-2 text-sm rounded-lg font-medium transition-all ${mode === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
           {isEs ? 'Crear cuenta' : 'Sign up'}
         </button>
       </div>
@@ -198,73 +183,37 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
           <label className="block text-xs font-medium text-gray-600 mb-1">
             {isEs ? 'Correo electrónico' : 'Email address'}
           </label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder={isEs ? 'tu@correo.com' : 'you@email.com'}
-            autoComplete="email"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-gray-50 focus:outline-none focus:border-green-400 focus:bg-white"
-          />
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" autoComplete="email"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-gray-50 focus:outline-none focus:border-green-400 focus:bg-white" />
         </div>
-
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
             {isEs ? 'Contraseña' : 'Password'}
           </label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder={isEs ? 'Mínimo 6 caracteres' : 'At least 6 characters'}
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Mínimo 6 caracteres' : 'At least 6 characters'}
             autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-gray-50 focus:outline-none focus:border-green-400 focus:bg-white"
-            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          />
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         </div>
-
         {mode === 'register' && (
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
               {isEs ? 'Confirmar contraseña' : 'Confirm password'}
             </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              placeholder={isEs ? 'Repite la contraseña' : 'Repeat password'}
-              autoComplete="new-password"
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password"
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-gray-50 focus:outline-none focus:border-green-400 focus:bg-white"
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            />
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
           </div>
         )}
-
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
             <p className="text-xs text-red-600">{error}</p>
           </div>
         )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
-        >
-          {loading
-            ? (isEs ? 'Cargando...' : 'Loading...')
-            : mode === 'login'
-              ? (isEs ? 'Ingresar' : 'Sign in')
-              : (isEs ? 'Crear cuenta' : 'Create account')}
+        <button onClick={handleSubmit} disabled={loading}
+          className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+          {loading ? (isEs ? 'Cargando...' : 'Loading...') : mode === 'login' ? (isEs ? 'Ingresar' : 'Sign in') : (isEs ? 'Crear cuenta' : 'Create account')}
         </button>
-
-        {mode === 'register' && (
-          <p className="text-[11px] text-gray-500 text-center leading-snug px-2">
-            {isEs
-              ? 'Tu cuenta requiere aprobación de la administradora antes de poder acceder.'
-              : 'Your account requires admin approval before you can access.'}
-          </p>
-        )}
       </div>
     </div>
   );
