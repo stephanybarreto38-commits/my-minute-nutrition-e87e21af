@@ -1,6 +1,6 @@
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
-import type { ShoppingItem } from '../hooks/useAppStore';
+import type { ShoppingItem, ShoppingSection } from '../hooks/useAppStore';
 
 interface Props {
   lang: Lang;
@@ -9,11 +9,18 @@ interface Props {
   onClear: () => void;
 }
 
+const SECTION_ORDER: ShoppingSection[] = ['produce', 'protein', 'dairy', 'pantry'];
+
 export default function ShoppingScreen({ lang, items, onToggle, onClear }: Props) {
   const tx = t[lang];
 
-  const babyItems = items.filter(i => i.tag === 'baby');
-  const momItems  = items.filter(i => i.tag === 'mom');
+  const grouped: Record<ShoppingSection, ShoppingItem[]> = {
+    produce: [], protein: [], dairy: [], pantry: [],
+  };
+  for (const it of items) {
+    const key = (SECTION_ORDER.includes(it.section) ? it.section : 'pantry') as ShoppingSection;
+    grouped[key].push(it);
+  }
 
   const SectionLabel = ({ label }: { label: string }) => (
     <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide px-4 pt-3 pb-2">
@@ -45,6 +52,9 @@ export default function ShoppingScreen({ lang, items, onToggle, onClear }: Props
         <span className={`flex-1 text-sm ${item.checked ? 'line-through text-gray-300' : 'text-gray-800'}`}>
           {name}
         </span>
+        {item.quantity > 1 && (
+          <span className="text-[11px] font-semibold text-gray-500">×{item.quantity}</span>
+        )}
         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${tagColor}`}>
           {tagLabel}
         </span>
@@ -69,18 +79,16 @@ export default function ShoppingScreen({ lang, items, onToggle, onClear }: Props
           <p className="text-center text-sm text-gray-400 py-12">{tx.shopping.empty}</p>
         ) : (
           <>
-            {babyItems.length > 0 && (
-              <>
-                <SectionLabel label={tx.shopping.forBaby} />
-                {babyItems.map(item => <ItemRow key={item.id} item={item} />)}
-              </>
-            )}
-            {momItems.length > 0 && (
-              <>
-                <SectionLabel label={tx.shopping.forMom} />
-                {momItems.map(item => <ItemRow key={item.id} item={item} />)}
-              </>
-            )}
+            {SECTION_ORDER.map(section => {
+              const rows = grouped[section];
+              if (!rows.length) return null;
+              return (
+                <div key={section}>
+                  <SectionLabel label={tx.shopping[section]} />
+                  {rows.map(item => <ItemRow key={item.id} item={item} />)}
+                </div>
+              );
+            })}
           </>
         )}
         <div className="h-4" />
