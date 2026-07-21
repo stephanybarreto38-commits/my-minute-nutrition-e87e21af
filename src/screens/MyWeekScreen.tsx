@@ -139,6 +139,23 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
   const commonAllergens = useMemo(() => FOODS.filter(f => f.isAllergen), []);
 
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
+  const [showShopping, setShowShopping] = useState(false);
+
+  // Shopping list checked state — persisted separately so it survives regenerations
+  const shoppingKey = `little_meal_week_shopping_${userKey}`;
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(shoppingKey);
+      if (raw) setChecked(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [shoppingKey]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(shoppingKey, JSON.stringify(checked));
+  }, [checked, shoppingKey]);
+
 
   const tx = lang === 'es' ? {
     title: 'Mi semana',
