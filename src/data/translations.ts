@@ -147,6 +147,7 @@ export const t = {
     appName: 'Little Meal',
     nav: {
       home: 'Home',
+      myWeek: 'My week',
       shopping: 'Shopping',
       worldRecipes: 'World',
       profile: 'Mia',
