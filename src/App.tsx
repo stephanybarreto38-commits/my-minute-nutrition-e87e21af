@@ -227,6 +227,10 @@ export default function App() {
               onOpenAdmin={() => store.navigateTo('admin')}
               onLogout={store.logoutUser}
               onToggleLang={handleLangToggle}
+              onAddBaby={handleAddBaby}
+              shareBaby={store.shareBaby}
+              listShares={store.listShares}
+              revokeShare={store.revokeShare}
             />
           )}
           {store.screen !== 'food-detail' && store.screen !== 'fridge' && store.screen !== 'login' && store.screen !== 'onboarding' && (
