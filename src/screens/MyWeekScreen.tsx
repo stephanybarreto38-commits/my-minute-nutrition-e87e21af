@@ -120,7 +120,7 @@ function foodSection(foodId: string): Section {
   const f = FOODS.find(x => x.id === foodId);
   if (!f) return 'pantry';
   if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
-  if (f.category === 'protein') return 'protein';
+  if (f.category === 'proteins') return 'protein';
   return 'pantry';
 }
 
