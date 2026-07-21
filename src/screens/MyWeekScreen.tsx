@@ -389,30 +389,17 @@ export default function MyWeekScreen({
               ⚙️ {tx.editConfig}
             </button>
             <button
+              onClick={() => setPantrySheetOpen(true)}
+              className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition"
+            >
+              🥫 {tx.managePantry}
+            </button>
+            <button
               onClick={() => {
                 if (!plan) return;
-                const groups = buildShoppingList(plan);
-                const items: ShoppingInput[] = [];
-                (['produce', 'protein', 'dairy', 'pantry'] as Section[]).forEach(sec => {
-                  groups[sec].forEach(g => {
-                    const f = FOODS.find(x => x.id === g.foodId);
-                    if (!f) return;
-                    items.push({
-                      nameEs: f.nameEs,
-                      nameEn: f.nameEn,
-                      tag: 'baby',
-                      section: sec,
-                      quantity: g.count,
-                    });
-                  });
-                });
-                if (items.length === 0) return;
-                onAddToShopping(items);
-                setAddedToast(true);
-                setTimeout(() => {
-                  setAddedToast(false);
-                  onGoToShopping();
-                }, 800);
+                // pre-check items already in the persistent pantry
+                setAlreadyHave(new Set(pantry));
+                setPreviewOpen(true);
               }}
               className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto"
             >
