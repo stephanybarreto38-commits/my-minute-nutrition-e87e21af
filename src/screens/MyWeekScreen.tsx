@@ -198,6 +198,12 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
     swapTitle: 'Swap this meal',
     close: 'Close',
     noMatches: 'No compatible recipes found. Adjust method or restrictions.',
+    shoppingCta: 'Generate shopping list',
+    shoppingTitle: 'This week\u2019s shopping list',
+    shoppingEmpty: 'No ingredients yet.',
+    clearChecked: 'Clear checked',
+    sections: { produce: 'Produce', proteins: 'Proteins', dairy: 'Dairy', pantry: 'Pantry' } as Record<Section, string>,
+    unit: (n: number) => `${n} serving${n === 1 ? '' : 's'}`,
   };
 
   const openOnboarding = () => {
