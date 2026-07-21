@@ -377,7 +377,7 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
 
 // ─── Onboarding form ────────────────────────────────────────────────
 function OnboardingForm(props: {
-  tx: Record<string, string>;
+  tx: any;
   method: FeedingMethod;
   setMethod: (m: FeedingMethod) => void;
   ageMonths: number;
@@ -477,7 +477,7 @@ function OnboardingForm(props: {
 // ─── Swap sheet ────────────────────────────────────────────────
 function SwapSheet(props: {
   lang: Lang;
-  tx: Record<string, string>;
+  tx: any;
   plan: WeekPlan;
   day: number;
   meal: number;
