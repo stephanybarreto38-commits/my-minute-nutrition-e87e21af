@@ -305,10 +305,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_baby_access: {
-        Args: { _baby_id: string; _need_editor?: boolean; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "user"
