@@ -281,6 +281,7 @@ export function useAppStore() {
     saveLog,
     quickLog,
     addToShoppingList,
+    addWeekToShoppingList,
     toggleShoppingItem,
     clearCheckedItems,
     triedFoodIds,
