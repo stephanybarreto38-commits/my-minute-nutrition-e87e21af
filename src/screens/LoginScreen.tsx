@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
 import type { Lang } from '../data/translations';
 
 interface Props {
@@ -31,40 +30,9 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [socialBusy, setSocialBusy] = useState<'google' | 'apple' | null>(null);
 
   const isEs = lang === 'es';
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-
-  // Preserve invite token across OAuth redirect
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const invite = params.get('invite');
-    if (invite) sessionStorage.setItem('little_meal_pending_invite', invite);
-  }, []);
-
-  const handleSocial = async (provider: 'google' | 'apple') => {
-    setSocialBusy(provider);
-    setError('');
-    try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        setError(result.error instanceof Error ? result.error.message : String(result.error));
-        setSocialBusy(null);
-        return;
-      }
-      if ('redirected' in result && result.redirected) return; // browser navigates away
-      // Session set inline (popup path)
-      const { data: sess } = await supabase.auth.getSession();
-      if (sess.session?.user?.email) onLogin(sess.session.user.email);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setSocialBusy(null);
-    }
-  };
 
   const handleSubmit = async () => {
     setError('');
@@ -141,30 +109,6 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
         <p className="text-sm text-gray-500 mt-1">
           {isEs ? 'Alimentación complementaria para tu bebé' : 'Complementary feeding for your baby'}
         </p>
-      </div>
-
-      {/* Social auth */}
-      <div className="w-full max-w-sm space-y-2 mb-4">
-        <button
-          onClick={() => handleSocial('google')}
-          disabled={!!socialBusy}
-          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-60 text-gray-800 font-medium py-2.5 rounded-xl text-sm"
-        >
-          <span>🔵</span> {socialBusy === 'google' ? '...' : (isEs ? 'Continuar con Google' : 'Continue with Google')}
-        </button>
-        <button
-          onClick={() => handleSocial('apple')}
-          disabled={!!socialBusy}
-          className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-900 disabled:opacity-60 font-medium py-2.5 rounded-xl text-sm"
-        >
-          <span></span> {socialBusy === 'apple' ? '...' : (isEs ? 'Continuar con Apple' : 'Continue with Apple')}
-        </button>
-      </div>
-
-      <div className="w-full max-w-sm flex items-center gap-2 mb-4">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-[10px] uppercase text-gray-400 tracking-wide">{isEs ? 'o con correo' : 'or with email'}</span>
-        <div className="flex-1 h-px bg-gray-200" />
       </div>
 
       <div className="w-full max-w-sm bg-gray-100 rounded-xl p-1 flex mb-4">

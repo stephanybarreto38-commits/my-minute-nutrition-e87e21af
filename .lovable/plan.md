@@ -1,61 +1,54 @@
-# Plan: Cuentas, multi-bebé, compartir con pareja y persistencia en la nube
+## Objetivo
 
-Ya hay Lovable Cloud (Supabase) conectado con auth email/password, tabla `profiles`, `user_roles` y `baby_profiles` (un bebé por usuario). Vamos a extender eso — no reemplazarlo — para cubrir todo el pedido.
+Simplificar la app a **un solo perfil de bebé por cuenta**, eliminar login social (Google/Apple), garantizar que **todos los datos del usuario persistan en la nube** (nada se pierde al refrescar o abrir desde otro dispositivo), y permitir **personalizar los platos del menú semanal** agregando componentes extra (ej. sumar una proteína a un plato de vegetales).
 
-## 1. Auth social (Google + Apple)
-- Habilitar Google y Apple en Lovable Cloud (managed OAuth, sin credenciales del usuario).
-- En `LoginScreen.tsx`: agregar botones "Continuar con Google" y "Continuar con Apple" usando `lovable.auth.signInWithOAuth(...)` con `redirect_uri: window.location.origin`.
-- Mantener email/password + el flujo de aprobación admin ya existente (los usuarios sociales también entran a `profiles` vía trigger `handle_new_user` y quedan `approved=false` hasta que el admin los apruebe — salvo el email admin que se auto-aprueba).
+---
 
-## 2. Multi-bebé por cuenta
-- Migración: `baby_profiles` ya tiene `user_id + name + birth_date + method`. Agregar columna `id uuid PK default gen_random_uuid()` y quitar la unicidad implícita por usuario (hoy el código hace upsert por `user_id`). Índice por `user_id`.
-- Nueva columna `active_baby_id uuid` en `profiles` para recordar el bebé seleccionado.
-- `useAppStore.ts`: cambiar `baby: BabyProfile | null` → `babies: BabyProfile[]` + `activeBabyId: string | null`. Getter `activeBaby` derivado.
-- `OnboardingScreen.tsx` se reutiliza como "crear perfil de bebé": se dispara automáticamente cuando `babies.length === 0` y también desde un botón "+ Agregar bebé" en el selector y en Perfil.
+## 1. Volver a un solo perfil de bebé
 
-## 3. Selector de bebé
-- Nuevo componente `BabySwitcher.tsx` en la barra superior del `PhoneFrame` (visible solo si `babies.length >= 1`): muestra el bebé activo con avatar/iniciales, dropdown con los demás, y opción "+ Agregar bebé".
-- Cambiar de bebé actualiza `active_baby_id` en Supabase y recarga plan/lista/tried del bebé activo.
+- Quitar el selector de bebés (`BabySwitcher`) de la UI.
+- En `useAppStore.ts`: reemplazar `babies[]` + `activeBabyId` por un único `baby` (el primero del usuario). Toda la lógica que hoy filtra por `activeBabyId` pasa a usar `baby.id`.
+- En `ProfileScreen.tsx`: quitar botón "Agregar bebé" y la sección de compartir con pareja (`ShareSheet`). Dejar solo edición de nombre / fecha de nacimiento / método.
+- No se borran tablas ni datos existentes; solo se oculta la funcionalidad multi-bebé y se toma siempre el primer `baby_profile` de la cuenta.
 
-## 4. Compartir con mi pareja
-- Nueva tabla `baby_shares (id, baby_id, owner_id, invited_email, invited_user_id nullable, role 'viewer'|'editor', status 'pending'|'accepted', token, created_at)`.
-- RLS: el owner ve/gestiona sus shares; el invitado ve el baby cuando `invited_user_id = auth.uid()` y `status='accepted'`.
-- Ajustar RLS de `baby_profiles`, `weekly_plans`, `shopping_items` para permitir acceso a usuarios con share aceptado sobre ese `baby_id` (via función security-definer `has_baby_access(baby_id, user_id)`).
-- UI: en Perfil, botón "Compartir con mi pareja" abre sheet con:
-  - Input de email + selector rol (Ver / Editar).
-  - Link mágico `/(app)/?invite=<token>` que al abrirlo (autenticado) acepta el share (marca `invited_user_id = auth.uid()`, `status='accepted'`).
-  - Lista de shares actuales con opción de revocar.
-- Envío de email: usar Lovable Email (dominio managed) con un template simple "Te invitaron a Little Meal".
+## 2. Quitar Google / Apple
 
-## 5. Idioma por cuenta
-- Agregar `lang text default 'es'` a `profiles`. Al login hidratar `lang` desde Supabase; al cambiar idioma hacer `update profiles set lang=...`.
+- `LoginScreen.tsx`: eliminar botones de Google y Apple y su lógica (`signInWithOAuth`). Dejar solo email + contraseña (signup / login).
+- Quitar el manejo de invite tokens de pareja en el login y en `App.tsx` (ya no aplica sin sharing).
+- Backend: desactivar proveedores Google y Apple, dejando solo email habilitado.
 
-## 6. Persistencia en la nube: plan semanal + lista de compras
-Nuevas tablas (scopeadas a `baby_id`, no a `user_id`, para que el share funcione):
+## 3. Persistencia total en la nube (sin pérdida al refrescar)
 
-- `weekly_plans (id, baby_id, week_start date, slots jsonb, created_at, updated_at)` — un registro por semana; `slots` = `[{day, mealKey, recipeId}]`.
-- `shopping_items (id, baby_id, name, quantity int, section text, tag 'baby'|'mom', checked bool, source 'manual'|'week', created_at)`.
-- `pantry_items (id, baby_id, food_name, created_at, unique(baby_id, food_name))`.
-- `tried_foods (id, baby_id, food_id text, created_at, unique(baby_id, food_id))` — hoy también está en memoria/local.
+Auditar cada pieza de estado del usuario y asegurarme de que se lea/escriba en Supabase, no solo en `localStorage`:
 
-RLS: acceso via `has_baby_access(baby_id, auth.uid())` (owner O share aceptado con rol correspondiente). `viewer` = solo SELECT; `editor` = SELECT/INSERT/UPDATE/DELETE.
+- **Tried foods** (frutas/alimentos probados) → tabla `tried_foods` scoped por `baby_id`. Verificar que `toggleTried` haga `upsert`/`delete` en Supabase y que al iniciar sesión se hidraten desde ahí.
+- **Weekly plan** (`weekly_plans`) → guardar el plan generado y cualquier swap/edición.
+- **Shopping list** (`shopping_items`) → guardar items, cantidades, `checked`, sección.
+- **Pantry** ("Mi despensa", `pantry_items`) → guardar toggles.
+- **Idioma** y **método de alimentación** → en `profiles` / `baby_profiles`.
+- **Onboarding completado** → derivado de la existencia del `baby_profile` (ya funciona así).
 
-`useAppStore.ts`:
-- Reemplazar `localStorage` por lecturas/escrituras a Supabase para plan, shopping, pantry, tried.
-- Al cambiar `activeBabyId` (o al login) → refetch de los cuatro conjuntos.
-- Escrituras optimistas + rollback si falla.
-- Migración one-shot: al primer login, si hay datos en `localStorage` con las claves viejas (`little_meal_shopping_*`, `little_meal_pantry_*`, plan) y el bebé activo no tiene datos en la nube, subirlos y limpiar localStorage.
+Retirar los `localStorage.setItem` que hoy sirven de fuente principal para estos datos; mantener `localStorage` solo como caché opcional. La carga inicial de la app tras login siempre viene de Supabase, así abrir desde otro dispositivo muestra el mismo estado.
 
-## Orden de implementación
-1. Migración SQL: columnas nuevas, tablas nuevas, `has_baby_access`, RLS + GRANTs.
-2. Habilitar Google + Apple (managed) y botones sociales en `LoginScreen`.
-3. Refactor de `useAppStore` a `babies[]` + `activeBabyId` + carga desde Supabase.
-4. `BabySwitcher` en `PhoneFrame`, reuso de `OnboardingScreen` para "+ agregar bebé".
-5. Mover plan / shopping / pantry / tried a Supabase con cargas por bebé activo.
-6. Idioma en `profiles`.
-7. Sharing: tabla, RLS, UI de invitación y aceptación por link/email.
+## 4. Personalizar platos del menú semanal
 
-## Preguntas para vos
-- **Rol del invitado por defecto**: ¿"Editar" (co-cuidador real) o "Ver" con la opción de cambiarlo? Yo sugiero **Editar por defecto** porque el caso de uso es la pareja.
-- **Email de invitación**: ¿te sirve que use Lovable Email con el remitente managed por ahora, o querés custom domain desde el arranque?
-- **Aprobación admin**: ¿los usuarios que entran con Google/Apple también deben pasar por la aprobación manual, o los auto-aprobamos por venir de un proveedor verificado?
+En `MyWeekScreen.tsx`, cada casillero (comida) hoy es una receta única e intercambiable. Cambios:
+
+- Al tocar un plato, además de "Cambiar receta" agregar **"Personalizar plato"**.
+- Modal de personalización con categorías: **Proteína**, **Vegetal**, **Carbohidrato**, **Fruta / extra**. El usuario puede sumar uno o varios componentes desde la lista de alimentos ya conocidos por la app (mismo catálogo de `foods`).
+- El plato pasa a ser `{ recipeId, extras: FoodId[] }`. Se sigue mostrando el nombre de la receta base y debajo chips con los extras añadidos ("+ pollo", "+ arroz").
+- La **lista de compras** consolida ingredientes de la receta base **más** los extras agregados (misma lógica de agrupar por sección y respetar la despensa).
+- El plan personalizado se guarda en `weekly_plans` (agregar campo `extras jsonb` al row o dentro del JSON del plan).
+
+## 5. Verificación
+
+- Login con email → completar onboarding → marcar alimentos probados → generar semana → personalizar un plato agregando proteína → generar lista de compras → refrescar navegador y abrir en otro dispositivo → todo debe seguir igual.
+
+---
+
+## Detalles técnicos
+
+- Migración SQL: añadir columna `extras jsonb default '[]'` a `weekly_plans` (o extender el shape del JSON existente si el plan ya se guarda serializado). No se eliminan `baby_shares` ni columnas multi-bebé — solo se dejan de usar en la UI para no romper datos existentes.
+- Auth: `supabase--configure_social_auth` con `disable_providers: ["google", "apple"]`.
+- Store: colapsar `babies[]` a `baby` con selectors compat para no reescribir cada pantalla; cada mutación de tried/plan/shopping/pantry hace la escritura optimista + `await` a Supabase.
+- UI: quitar imports de `BabySwitcher` y `ShareSheet` en `App.tsx` y `ProfileScreen.tsx`.
