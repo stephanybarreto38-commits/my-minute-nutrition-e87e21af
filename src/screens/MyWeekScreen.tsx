@@ -436,16 +436,10 @@ export default function MyWeekScreen({
         />
       )}
 
-      {showShopping && plan && (
-        <ShoppingSheet
-          lang={lang}
-          tx={tx}
-          plan={plan}
-          checked={checked}
-          onToggle={(id) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))}
-          onClearChecked={() => setChecked({})}
-          onClose={() => setShowShopping(false)}
-        />
+      {addedToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg">
+          🛒 {tx.shoppingCta} ✓
+        </div>
       )}
     </div>
   );
