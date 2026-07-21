@@ -3,7 +3,7 @@ import type { Food, FoodLog, Reaction } from '../data/foods';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import type { FeedingMethod } from '../hooks/useAppStore';
-import type { ShoppingItem } from '../hooks/useAppStore';
+import type { ShoppingInput, ShoppingSection } from '../hooks/useAppStore';
 import { getRecipesByFoodId } from '../data/recipes';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
   method: FeedingMethod;
   onBack: () => void;
   onSaveLog: (foodId: string, log: Partial<FoodLog>) => void;
-  onAddToShopping: (items: Omit<ShoppingItem, 'id' | 'checked'>[]) => void;
+  onAddToShopping: (items: ShoppingInput[]) => void;
 }
 
 type Tab = 'prep' | 'menu' | 'log';
@@ -48,8 +48,14 @@ export default function FoodDetailScreen({
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const babySection: ShoppingSection = (() => {
+    if (food.category === 'fruits' || food.category === 'vegetables') return 'produce';
+    if (food.category === 'proteins') return 'protein';
+    return 'pantry';
+  })();
+
   const handleAddToShopping = () => {
-    onAddToShopping([{ nameEs: food.nameEs, nameEn: food.nameEn, tag: 'baby' }]);
+    onAddToShopping([{ nameEs: food.nameEs, nameEn: food.nameEn, tag: 'baby', section: babySection, quantity: 1 }]);
   };
 
   const TABS: { id: Tab; label: string }[] = [
@@ -211,10 +217,12 @@ export default function FoodDetailScreen({
                       <p className="text-[12px] text-amber-900 leading-snug">{adultDesc}</p>
                       <button
                         onClick={() => onAddToShopping(
-                          adultItems.map((name, i) => ({
+                          adultItems.map((_name, i) => ({
                             nameEs: recipe.adultIngredientsEs[i],
                             nameEn: recipe.adultIngredientsEn[i],
                             tag: 'mom' as const,
+                            section: 'pantry' as const,
+                            quantity: 1,
                           }))
                         )}
                         className="mt-1.5 text-[11px] text-amber-700 flex items-center gap-1"

@@ -123,6 +123,10 @@ export const t = {
       mom: 'mamá',
       added: 'Agregado a lista de compras',
       empty: 'Aquí irán los ingredientes para cocinar con tu bebé 🛒',
+      produce: 'Verdulería / Frutas',
+      protein: 'Proteínas',
+      dairy: 'Lácteos',
+      pantry: 'Almacén / Despensa',
     },
     fridge: {
       title: '¿Qué cocino hoy?',
@@ -265,6 +269,10 @@ export const t = {
       mom: 'mom',
       added: 'Added to shopping list',
       empty: "Here you'll find ingredients to cook with your baby 🛒",
+      produce: 'Produce',
+      protein: 'Proteins',
+      dairy: 'Dairy',
+      pantry: 'Pantry',
     },
     fridge: {
       title: 'What should I cook today?',
