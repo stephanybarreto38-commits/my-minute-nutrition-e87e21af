@@ -60,8 +60,25 @@ export default function App() {
     store.screen !== 'onboarding';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8 relative">
+      {showBabySwitcher && (
+        <div className="fixed top-3 right-3 z-40 md:absolute md:top-6 md:right-6">
+          <BabySwitcher
+            lang={store.lang}
+            babies={store.babies}
+            activeBabyId={store.activeBabyId}
+            onSelect={store.setActiveBaby}
+            onAddBaby={handleAddBaby}
+          />
+        </div>
+      )}
+      {inviteFlash && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-xs font-medium px-4 py-2 rounded-full shadow">
+          {inviteFlash}
+        </div>
+      )}
       <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
+
         {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
         <aside className="hidden md:flex flex-col w-56 bg-green-700 text-white flex-shrink-0">
           <div className="px-5 pt-7 pb-6 border-b border-green-600">
