@@ -13,6 +13,7 @@ interface Props {
 }
 
 type MealSlot = 'breakfast' | 'lunch' | 'snack' | 'dinner';
+type Section = 'produce' | 'proteins' | 'dairy' | 'pantry';
 
 interface WeekConfig {
   method: FeedingMethod;
@@ -110,6 +111,42 @@ function buildGrid(cfg: WeekConfig): (string | null)[][] {
   return grid;
 }
 
+// Explicit overrides for foods that don't map cleanly by category
+const DAIRY_IDS = new Set<string>(['yogurt', 'cheese', 'milk', 'butter']);
+function foodSection(foodId: string): Section {
+  if (DAIRY_IDS.has(foodId)) return 'dairy';
+  const f = FOODS.find(x => x.id === foodId);
+  if (!f) return 'pantry';
+  if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
+  if (f.category === 'proteins') return 'proteins';
+  return 'pantry';
+}
+
+interface ShoppingItem { foodId: string; count: number; section: Section; }
+
+function buildShoppingList(plan: WeekPlan): Record<Section, ShoppingItem[]> {
+  const counts = new Map<string, number>();
+  for (const row of plan.grid) {
+    for (const rid of row) {
+      if (!rid) continue;
+      const recipe = RECIPES.find(r => r.id === rid);
+      if (!recipe) continue;
+      for (const fid of recipe.foodIds) {
+        counts.set(fid, (counts.get(fid) ?? 0) + 1);
+      }
+    }
+  }
+  const groups: Record<Section, ShoppingItem[]> = { produce: [], proteins: [], dairy: [], pantry: [] };
+  for (const [foodId, count] of counts.entries()) {
+    const section = foodSection(foodId);
+    groups[section].push({ foodId, count, section });
+  }
+  (Object.keys(groups) as Section[]).forEach(s => {
+    groups[s].sort((a, b) => b.count - a.count);
+  });
+  return groups;
+}
+
 export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey, onMethodChange }: Props) {
   const storageKey = `little_meal_week_plan_${userKey}`;
   const [plan, setPlan] = useState<WeekPlan | null>(null);
@@ -139,6 +176,23 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
   const commonAllergens = useMemo(() => FOODS.filter(f => f.isAllergen), []);
 
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
+  const [showShopping, setShowShopping] = useState(false);
+
+  // Shopping list checked state — persisted separately so it survives regenerations
+  const shoppingKey = `little_meal_week_shopping_${userKey}`;
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(shoppingKey);
+      if (raw) setChecked(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [shoppingKey]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(shoppingKey, JSON.stringify(checked));
+  }, [checked, shoppingKey]);
+
 
   const tx = lang === 'es' ? {
     title: 'Mi semana',
@@ -157,6 +211,12 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
     swapTitle: 'Cambiar esta comida',
     close: 'Cerrar',
     noMatches: 'No encontramos recetas compatibles. Ajustá el método o restricciones.',
+    shoppingCta: 'Generar lista de compras',
+    shoppingTitle: 'Lista de compras de la semana',
+    shoppingEmpty: 'Todavía no hay ingredientes.',
+    clearChecked: 'Limpiar marcados',
+    sections: { produce: 'Verdulería / Frutas', proteins: 'Proteínas', dairy: 'Lácteos', pantry: 'Almacén / Despensa' } as Record<Section, string>,
+    unit: (n: number) => `${n} porción${n === 1 ? '' : 'es'}`,
   } : {
     title: 'My week',
     sub: 'Plan 7 days of meals for your baby.',
@@ -174,6 +234,12 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
     swapTitle: 'Swap this meal',
     close: 'Close',
     noMatches: 'No compatible recipes found. Adjust method or restrictions.',
+    shoppingCta: 'Generate shopping list',
+    shoppingTitle: 'This week\u2019s shopping list',
+    shoppingEmpty: 'No ingredients yet.',
+    clearChecked: 'Clear checked',
+    sections: { produce: 'Produce', proteins: 'Proteins', dairy: 'Dairy', pantry: 'Pantry' } as Record<Section, string>,
+    unit: (n: number) => `${n} serving${n === 1 ? '' : 's'}`,
   };
 
   const openOnboarding = () => {
@@ -281,6 +347,12 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
             >
               ⚙️ {tx.editConfig}
             </button>
+            <button
+              onClick={() => setShowShopping(true)}
+              className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto"
+            >
+              🛒 {tx.shoppingCta}
+            </button>
           </div>
 
           {eligibleRecipes(plan.config).length === 0 && (
@@ -348,13 +420,25 @@ export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey,
           onClose={() => setSwapFor(null)}
         />
       )}
+
+      {showShopping && plan && (
+        <ShoppingSheet
+          lang={lang}
+          tx={tx}
+          plan={plan}
+          checked={checked}
+          onToggle={(id) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))}
+          onClearChecked={() => setChecked({})}
+          onClose={() => setShowShopping(false)}
+        />
+      )}
     </div>
   );
 }
 
 // ─── Onboarding form ────────────────────────────────────────────────
 function OnboardingForm(props: {
-  tx: Record<string, string>;
+  tx: any;
   method: FeedingMethod;
   setMethod: (m: FeedingMethod) => void;
   ageMonths: number;
@@ -454,7 +538,7 @@ function OnboardingForm(props: {
 // ─── Swap sheet ────────────────────────────────────────────────
 function SwapSheet(props: {
   lang: Lang;
-  tx: Record<string, string>;
+  tx: any;
   plan: WeekPlan;
   day: number;
   meal: number;
@@ -499,6 +583,90 @@ function SwapSheet(props: {
           {pool.length === 0 && (
             <p className="text-sm text-gray-500 text-center py-6">{tx.noMatches}</p>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Shopping list sheet ────────────────────────────────────────────
+function ShoppingSheet(props: {
+  lang: Lang;
+  tx: any;
+  plan: WeekPlan;
+  checked: Record<string, boolean>;
+  onToggle: (foodId: string) => void;
+  onClearChecked: () => void;
+  onClose: () => void;
+}) {
+  const { lang, tx, plan, checked, onToggle, onClearChecked, onClose } = props;
+  const groups = useMemo(() => buildShoppingList(plan), [plan]);
+  const orderedSections: Section[] = ['produce', 'proteins', 'dairy', 'pantry'];
+  const anyItems = orderedSections.some(s => groups[s].length > 0);
+  const hasChecked = Object.values(checked).some(Boolean);
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">🛒 {tx.shoppingTitle}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+        </div>
+
+        {hasChecked && (
+          <div className="px-4 pt-3">
+            <button onClick={onClearChecked}
+              className="text-[11px] font-medium text-gray-500 hover:text-gray-800 underline">
+              {tx.clearChecked}
+            </button>
+          </div>
+        )}
+
+        <div className="overflow-y-auto flex-1 px-3 py-3 space-y-3">
+          {!anyItems && (
+            <p className="text-sm text-gray-500 text-center py-6">{tx.shoppingEmpty}</p>
+          )}
+          {orderedSections.map(section => {
+            const items = groups[section];
+            if (!items.length) return null;
+            return (
+              <div key={section} className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-2 px-1">
+                  {tx.sections[section]}
+                </p>
+                <ul className="space-y-1.5">
+                  {items.map(item => {
+                    const food = FOODS.find(f => f.id === item.foodId);
+                    const isChecked = !!checked[item.foodId];
+                    const name = food ? (lang === 'es' ? food.nameEs : food.nameEn) : item.foodId;
+                    return (
+                      <li key={item.foodId}>
+                        <button
+                          onClick={() => onToggle(item.foodId)}
+                          className={`w-full flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border transition text-left ${
+                            isChecked ? 'border-green-200 opacity-60' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                            isChecked ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300'
+                          }`}>
+                            {isChecked && <span className="text-[11px] leading-none">✓</span>}
+                          </span>
+                          <span className="text-lg">{food?.emoji ?? '🥣'}</span>
+                          <span className={`flex-1 text-sm font-medium ${isChecked ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                            {name}
+                          </span>
+                          <span className="text-[11px] text-gray-500 font-semibold">
+                            ×{item.count}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
