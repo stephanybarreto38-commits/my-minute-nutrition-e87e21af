@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Lang } from '../data/translations';
-import type { FeedingMethod } from '../hooks/useAppStore';
+import type { FeedingMethod, ShoppingInput, ShoppingSection } from '../hooks/useAppStore';
 import { FOODS } from '../data/foods';
 import { RECIPES, type Recipe } from '../data/recipes';
 
@@ -10,10 +10,12 @@ interface Props {
   babyMonths: number;
   userKey: string; // for persistence scoping
   onMethodChange?: (m: FeedingMethod) => void;
+  onAddToShopping: (items: ShoppingInput[]) => void;
+  onGoToShopping: () => void;
 }
 
 type MealSlot = 'breakfast' | 'lunch' | 'snack' | 'dinner';
-type Section = 'produce' | 'proteins' | 'dairy' | 'pantry';
+type Section = ShoppingSection;
 
 interface WeekConfig {
   method: FeedingMethod;
