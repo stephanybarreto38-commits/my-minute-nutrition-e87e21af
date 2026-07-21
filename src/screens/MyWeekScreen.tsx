@@ -473,6 +473,59 @@ export default function MyWeekScreen({
         />
       )}
 
+      {previewOpen && plan && (
+        <PreviewSheet
+          lang={lang}
+          tx={tx}
+          plan={plan}
+          pantry={pantry}
+          alreadyHave={alreadyHave}
+          onToggleHave={(fid) => setAlreadyHave(prev => {
+            const next = new Set(prev);
+            if (next.has(fid)) next.delete(fid); else next.add(fid);
+            return next;
+          })}
+          onOpenPantry={() => setPantrySheetOpen(true)}
+          onClose={() => setPreviewOpen(false)}
+          onConfirm={() => {
+            const groups = buildShoppingList(plan);
+            const items: ShoppingInput[] = [];
+            (['produce', 'protein', 'dairy', 'pantry'] as Section[]).forEach(sec => {
+              groups[sec].forEach(g => {
+                if (alreadyHave.has(g.foodId)) return; // excluded
+                const f = FOODS.find(x => x.id === g.foodId);
+                if (!f) return;
+                items.push({
+                  nameEs: f.nameEs,
+                  nameEn: f.nameEn,
+                  tag: 'baby',
+                  section: sec,
+                  quantity: g.count,
+                });
+              });
+            });
+            setPreviewOpen(false);
+            if (items.length === 0) return;
+            onAddToShopping(items);
+            setAddedToast(true);
+            setTimeout(() => {
+              setAddedToast(false);
+              onGoToShopping();
+            }, 700);
+          }}
+        />
+      )}
+
+      {pantrySheetOpen && (
+        <PantrySheet
+          lang={lang}
+          tx={tx}
+          pantry={pantry}
+          onToggle={togglePantry}
+          onClose={() => setPantrySheetOpen(false)}
+        />
+      )}
+
       {addedToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg">
           🛒 {tx.shoppingCta} ✓
