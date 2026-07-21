@@ -111,6 +111,42 @@ function buildGrid(cfg: WeekConfig): (string | null)[][] {
   return grid;
 }
 
+// Explicit overrides for foods that don't map cleanly by category
+const DAIRY_IDS = new Set<string>(['yogurt', 'cheese', 'milk', 'butter']);
+function foodSection(foodId: string): Section {
+  if (DAIRY_IDS.has(foodId)) return 'dairy';
+  const f = FOODS.find(x => x.id === foodId);
+  if (!f) return 'pantry';
+  if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
+  if (f.category === 'proteins') return 'proteins';
+  return 'pantry';
+}
+
+interface ShoppingItem { foodId: string; count: number; section: Section; }
+
+function buildShoppingList(plan: WeekPlan): Record<Section, ShoppingItem[]> {
+  const counts = new Map<string, number>();
+  for (const row of plan.grid) {
+    for (const rid of row) {
+      if (!rid) continue;
+      const recipe = RECIPES.find(r => r.id === rid);
+      if (!recipe) continue;
+      for (const fid of recipe.foodIds) {
+        counts.set(fid, (counts.get(fid) ?? 0) + 1);
+      }
+    }
+  }
+  const groups: Record<Section, ShoppingItem[]> = { produce: [], proteins: [], dairy: [], pantry: [] };
+  for (const [foodId, count] of counts.entries()) {
+    const section = foodSection(foodId);
+    groups[section].push({ foodId, count, section });
+  }
+  (Object.keys(groups) as Section[]).forEach(s => {
+    groups[s].sort((a, b) => b.count - a.count);
+  });
+  return groups;
+}
+
 export default function MyWeekScreen({ lang, currentMethod, babyMonths, userKey, onMethodChange }: Props) {
   const storageKey = `little_meal_week_plan_${userKey}`;
   const [plan, setPlan] = useState<WeekPlan | null>(null);
