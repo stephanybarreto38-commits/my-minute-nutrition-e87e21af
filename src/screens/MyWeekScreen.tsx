@@ -182,6 +182,35 @@ export default function MyWeekScreen({
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
   const [addedToast, setAddedToast] = useState(false);
 
+  // Persistent pantry (staples the user always has)
+  const pantryKey = `little_meal_pantry_${userKey}`;
+  const [pantry, setPantry] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(pantryKey);
+      if (raw) setPantry(new Set(JSON.parse(raw)));
+    } catch { /* ignore */ }
+  }, [pantryKey]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(pantryKey, JSON.stringify(Array.from(pantry)));
+  }, [pantry, pantryKey]);
+  const togglePantry = (foodId: string) => {
+    setPantry(prev => {
+      const next = new Set(prev);
+      if (next.has(foodId)) next.delete(foodId); else next.add(foodId);
+      return next;
+    });
+  };
+
+  // Preview sheet state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [pantrySheetOpen, setPantrySheetOpen] = useState(false);
+  const [alreadyHave, setAlreadyHave] = useState<Set<string>>(new Set());
+
+
+
 
 
 
