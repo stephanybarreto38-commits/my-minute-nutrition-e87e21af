@@ -13,6 +13,7 @@ interface Props {
 }
 
 type MealSlot = 'breakfast' | 'lunch' | 'snack' | 'dinner';
+type Section = 'produce' | 'proteins' | 'dairy' | 'pantry';
 
 interface WeekConfig {
   method: FeedingMethod;
