@@ -25,6 +25,12 @@ export const t = {
         soon: 'Próximamente',
         avoid: 'Evitar',
       },
+      mealNav: {
+        breakfast: 'Desayuno',
+        lunch: 'Almuerzo',
+        dinner: 'Cena',
+        snack: 'Snack',
+      },
       seeMore: (n: number, label: string) => `Ver ${n} ${label} más`,
       seeLess: 'Ver menos',
     },
