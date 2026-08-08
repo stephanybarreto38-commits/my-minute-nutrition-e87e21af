@@ -3,11 +3,13 @@ import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
-import { getRecipesByMealType, type MealType } from '../data/recipes';
+import { getRecipesByMealType, type MealType, type Recipe } from '../data/recipes';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
+import RecipeSheet from '../components/RecipeSheet';
+
 
 
 interface Props {
@@ -37,6 +39,7 @@ export default function HomeScreen({
     fruits: false, vegetables: false, proteins: false, grains: false,
   });
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
+  const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
@@ -44,6 +47,15 @@ export default function HomeScreen({
   const availableRecipes = getRecipesByMealType(activeMeal).filter(r =>
     r.foodIds.every(id => triedFoodIds.includes(id))
   );
+
+  // Rotación diaria: cada 24h se muestran otras opciones
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const dailyRecipes = availableRecipes.length <= 3
+    ? availableRecipes
+    : Array.from({ length: 3 }, (_, i) =>
+        availableRecipes[(dayIndex * 3 + i) % availableRecipes.length]
+      );
+
 
 
   const toggleExpand = (cat: FoodCategory) => {
