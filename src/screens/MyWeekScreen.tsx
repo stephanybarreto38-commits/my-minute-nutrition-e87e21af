@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw, Settings, ChefHat, ShoppingCart, Shuffle } from 'lucide-react';
 import type { Lang } from '../data/translations';
 import type { FeedingMethod, ShoppingInput, ShoppingSection } from '../hooks/useAppStore';
 import { FOODS } from '../data/foods';
@@ -189,6 +190,8 @@ export default function MyWeekScreen({
   const commonAllergens = useMemo(() => FOODS.filter(f => f.isAllergen), []);
 
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
+  const todayIndex = useMemo(() => (new Date().getDay() + 6) % 7, []);
+  const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
   const [addedToast, setAddedToast] = useState(false);
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -375,74 +378,105 @@ export default function MyWeekScreen({
 
       {plan && !showOnboarding && (
         <>
-          <div className="px-5 py-3 flex flex-wrap items-center gap-2">
-            <button onClick={regenerate} className="text-xs font-semibold bg-gray-900 text-white px-3 py-2 rounded-xl hover:bg-black transition">
-              🔄 {tx.regenerate}
+          <div className="px-4 py-3 flex items-center gap-2">
+            <button onClick={regenerate} className="flex items-center gap-1.5 text-xs font-semibold bg-gray-900 text-white px-3 py-2 rounded-xl hover:bg-black transition">
+              <RefreshCw size={14} /> {tx.regenerate}
             </button>
-            <button onClick={openOnboarding} className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
-              ⚙️ {tx.editConfig}
+            <button onClick={openOnboarding} className="flex items-center gap-1.5 text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
+              <Settings size={14} /> {tx.editConfig}
             </button>
-            <button onClick={() => setPantrySheetOpen(true)} className="text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
-              🥫 {tx.managePantry}
+            <button onClick={() => setPantrySheetOpen(true)} className="flex items-center gap-1.5 text-xs font-medium border border-gray-300 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
+              <ChefHat size={14} /> {tx.managePantry}
             </button>
             <button
               onClick={() => { setAlreadyHave(new Set(pantry)); setPreviewOpen(true); }}
-              className="text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto">
-              🛒 {tx.shoppingCta}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-green-700 text-white px-3 py-2 rounded-xl hover:bg-green-800 transition ml-auto">
+              <ShoppingCart size={14} /> {tx.shoppingCta}
             </button>
           </div>
 
           {eligibleRecipes(plan.config).length === 0 && (
-            <div className="mx-5 mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+            <div className="mx-4 mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
               {tx.noMatches}
             </div>
           )}
 
-          <div className="px-4 pb-24 space-y-3">
-            {plan.grid.map((row, dayIdx) => (
-              <div key={dayIdx} className={`rounded-2xl border ${colors.border} ${colors.bg} p-3`}>
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <p className="text-sm font-bold text-gray-800">{days[dayIdx]}</p>
-                  <span className="text-[10px] uppercase tracking-wide text-gray-500">{plan.config.method}</span>
-                </div>
-                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${plan.config.meals.length}, minmax(0, 1fr))` }}>
-                  {row.map((cell, mealIdx) => {
-                    const mealDef = ALL_MEALS.find(m => m.key === plan.config.meals[mealIdx])!;
-                    const recipe = cell ? RECIPES.find(r => r.id === cell.recipeId) : null;
-                    const sig = recipe ? recipeSignal(recipe, plan.config.ageMonths) : 'unknown';
-                    return (
-                      <button key={mealIdx} onClick={() => setSwapFor({ day: dayIdx, meal: mealIdx })}
-                        className={`text-left bg-white rounded-xl p-2.5 border border-gray-200 hover:ring-2 ${colors.ring} transition flex flex-col gap-1 min-h-[92px]`}>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-gray-500 uppercase">
+          <div className="px-4 pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              {days.map((d, i) => {
+                const active = i === selectedDay;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDay(i)}
+                    className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[72px] h-16 rounded-2xl border transition ${
+                      active ? `${colors.chip} border-transparent shadow` : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-sm font-bold">{d}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="px-4 pb-24">
+            <div className={`rounded-3xl border ${colors.border} ${colors.bg} p-4`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-gray-900">{days[selectedDay]}</h3>
+                <span className="text-xs font-medium text-gray-500">{plan.config.method}</span>
+              </div>
+              <div className="space-y-2.5">
+                {plan.grid[selectedDay].map((cell, mealIdx) => {
+                  const mealDef = ALL_MEALS.find(m => m.key === plan.config.meals[mealIdx])!;
+                  const recipe = cell ? RECIPES.find(r => r.id === cell.recipeId) : null;
+                  const sig = recipe ? recipeSignal(recipe, plan.config.ageMonths) : 'unknown';
+                  const firstFood = recipe ? FOODS.find(f => f.id === recipe.foodIds[0]) : null;
+                  return (
+                    <button
+                      key={mealIdx}
+                      onClick={() => setSwapFor({ day: selectedDay, meal: mealIdx })}
+                      className={`w-full flex items-center gap-3 text-left p-3 rounded-2xl border border-gray-200 bg-white hover:ring-2 ${colors.ring} transition`}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
+                        {firstFood ? firstFood.emoji : mealDef.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
                             {mealDef.emoji} {lang === 'es' ? mealDef.es : mealDef.en}
                           </span>
                           {recipe && signalPill(sig, lang)}
                         </div>
                         {recipe ? (
-                          <>
-                            <p className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">
-                              {lang === 'es' ? recipe.titleEs : recipe.titleEn}
-                            </p>
-                            {cell && cell.extras.length > 0 && (
-                              <div className="flex flex-wrap gap-0.5 mt-0.5">
-                                {cell.extras.map(fid => {
-                                  const f = FOODS.find(x => x.id === fid);
-                                  if (!f) return null;
-                                  return <span key={fid} className="text-[9px]" title={lang === 'es' ? f.nameEs : f.nameEn}>{f.emoji}</span>;
-                                })}
-                              </div>
-                            )}
-                          </>
+                          <p className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2">
+                            {lang === 'es' ? recipe.titleEs : recipe.titleEn}
+                          </p>
                         ) : (
-                          <p className="text-xs text-gray-400 italic">{tx.empty}</p>
+                          <p className="text-sm text-gray-400 italic">{tx.empty}</p>
                         )}
-                      </button>
-                    );
-                  })}
-                </div>
+                        {cell && cell.extras.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {cell.extras.map(fid => {
+                              const f = FOODS.find(x => x.id === fid);
+                              if (!f) return null;
+                              return (
+                                <span key={fid} className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-800" title={lang === 'es' ? f.nameEs : f.nameEn}>
+                                  {f.emoji} {lang === 'es' ? f.nameEs : f.nameEn}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0">
+                        <Shuffle size={14} />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            ))}
+            </div>
           </div>
         </>
       )}
