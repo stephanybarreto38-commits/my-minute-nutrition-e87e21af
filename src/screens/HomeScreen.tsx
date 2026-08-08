@@ -3,11 +3,13 @@ import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
-import { getRecipesByMealType, type MealType } from '../data/recipes';
+import { getRecipesByMealType, type MealType, type Recipe } from '../data/recipes';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
+import RecipeSheet from '../components/RecipeSheet';
+
 
 
 interface Props {
@@ -37,6 +39,7 @@ export default function HomeScreen({
     fruits: false, vegetables: false, proteins: false, grains: false,
   });
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
+  const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
@@ -44,6 +47,15 @@ export default function HomeScreen({
   const availableRecipes = getRecipesByMealType(activeMeal).filter(r =>
     r.foodIds.every(id => triedFoodIds.includes(id))
   );
+
+  // Rotación diaria: cada 24h se muestran otras opciones
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const dailyRecipes = availableRecipes.length <= 3
+    ? availableRecipes
+    : Array.from({ length: 3 }, (_, i) =>
+        availableRecipes[(dayIndex * 3 + i) % availableRecipes.length]
+      );
+
 
 
   const toggleExpand = (cat: FoodCategory) => {
@@ -82,37 +94,38 @@ export default function HomeScreen({
       {/* MEAL TYPE NAV */}
       <MealTypeNav activeMeal={activeMeal} onChange={setActiveMeal} lang={lang} />
 
-      {/* MEAL RECIPES */}
-      {availableRecipes.length > 0 && (
-        <div className="px-4 mt-2">
-          <p className="text-[13px] font-medium text-gray-900 mb-2">
-            {lang === 'es' ? 'Ideas para' : 'Ideas for'} {tx.home.mealNav[activeMeal]}
+      {/* MEAL RECIPES — rotan cada 24h */}
+      {dailyRecipes.length > 0 && (
+        <div className="mx-4 mb-3 rounded-2xl bg-green-50 p-3.5">
+          <p className="text-[11px] font-medium text-green-800 uppercase tracking-wide mb-0.5">
+            {lang === 'es' ? `Recetas para ${tx.home.mealNav[activeMeal]}` : `Recipes for ${tx.home.mealNav[activeMeal]}`}
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {availableRecipes.map(recipe => {
-              const food = FOODS.find(f => f.id === recipe.foodIds[0]);
-              return (
-                <div
-                  key={recipe.id}
-                  className="flex-shrink-0 w-36 rounded-xl bg-gray-50 border border-gray-200 p-2.5"
-                >
-                  <div className="text-2xl mb-1">{food?.emoji ?? '🍽️'}</div>
-                  <p className="text-xs font-medium text-gray-900 leading-tight line-clamp-2">
-                    {lang === 'es' ? recipe.titleEs : recipe.titleEn}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {recipe.methodBadges.map(badge => (
-                      <span key={badge} className="text-[9px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-gray-500">
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+          <p className="text-[13px] text-green-900 mb-2.5">
+            {lang === 'es'
+              ? `${dailyRecipes.length} recetas con lo que ${babyName} ya probó`
+              : `${dailyRecipes.length} recipes with what ${babyName} already tried`}
+          </p>
+          <div className="flex gap-2">
+            {dailyRecipes.map(recipe => (
+              <button
+                key={recipe.id}
+                onClick={() => setOpenRecipe(recipe)}
+                className="flex-1 min-w-0 text-left bg-white rounded-xl p-2"
+              >
+                <p className="text-[12px] font-medium text-gray-900 leading-tight line-clamp-2">
+                  {lang === 'es' ? recipe.titleEs : recipe.titleEn}
+                </p>
+                <p className="text-[10px] text-gray-500 mt-0.5">{recipe.timeMin} min</p>
+              </button>
+            ))}
           </div>
         </div>
       )}
+
+      {openRecipe && (
+        <RecipeSheet lang={lang} recipe={openRecipe} onClose={() => setOpenRecipe(null)} />
+      )}
+
 
       {/* STAGE BANNER */}
       <div className="mx-4 mt-3 rounded-xl bg-green-50 border border-green-200 p-3">
