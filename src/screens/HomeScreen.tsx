@@ -3,9 +3,12 @@ import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
+import { getRecipesByMealType, type MealType } from '../data/recipes';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
+import MealTypeNav from '../components/MealTypeNav';
+
 
 interface Props {
   lang: Lang;
@@ -33,9 +36,15 @@ export default function HomeScreen({
   const [expanded, setExpanded] = useState<Record<FoodCategory, boolean>>({
     fruits: false, vegetables: false, proteins: false, grains: false,
   });
+  const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
+
+  const availableRecipes = getRecipesByMealType(activeMeal).filter(r =>
+    r.foodIds.every(id => triedFoodIds.includes(id))
+  );
+
 
   const toggleExpand = (cat: FoodCategory) => {
     setExpanded(e => ({ ...e, [cat]: !e[cat] }));
@@ -70,8 +79,44 @@ export default function HomeScreen({
         </button>
       </div>
 
+      {/* MEAL TYPE NAV */}
+      <MealTypeNav activeMeal={activeMeal} onChange={setActiveMeal} lang={lang} />
+
+      {/* MEAL RECIPES */}
+      {availableRecipes.length > 0 && (
+        <div className="px-4 mt-2">
+          <p className="text-[13px] font-medium text-gray-900 mb-2">
+            {lang === 'es' ? 'Ideas para' : 'Ideas for'} {tx.home.mealNav[activeMeal]}
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {availableRecipes.map(recipe => {
+              const food = FOODS.find(f => f.id === recipe.foodIds[0]);
+              return (
+                <div
+                  key={recipe.id}
+                  className="flex-shrink-0 w-36 rounded-xl bg-gray-50 border border-gray-200 p-2.5"
+                >
+                  <div className="text-2xl mb-1">{food?.emoji ?? '🍽️'}</div>
+                  <p className="text-xs font-medium text-gray-900 leading-tight line-clamp-2">
+                    {lang === 'es' ? recipe.titleEs : recipe.titleEn}
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {recipe.methodBadges.map(badge => (
+                      <span key={badge} className="text-[9px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-gray-500">
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* STAGE BANNER */}
       <div className="mx-4 mt-3 rounded-xl bg-green-50 border border-green-200 p-3">
+
         <span className="inline-block bg-green-900 text-green-100 text-[10px] font-medium px-2.5 py-0.5 rounded-full mb-1.5">
           {tx.stage.pill(`${babyMonths}–${babyMonths + 1}`)}
         </span>
