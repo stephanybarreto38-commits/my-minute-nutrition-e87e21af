@@ -177,6 +177,12 @@ export const t = {
         soon: 'Coming soon',
         avoid: 'Avoid',
       },
+      mealNav: {
+        breakfast: 'Breakfast',
+        lunch: 'Lunch',
+        dinner: 'Dinner',
+        snack: 'Snack',
+      },
       seeMore: (n: number, label: string) => `See ${n} more ${label}`,
       seeLess: 'See less',
     },
