@@ -36,9 +36,15 @@ export default function HomeScreen({
   const [expanded, setExpanded] = useState<Record<FoodCategory, boolean>>({
     fruits: false, vegetables: false, proteins: false, grains: false,
   });
+  const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
+
+  const availableRecipes = getRecipesByMealType(activeMeal).filter(r =>
+    r.foodIds.every(id => triedFoodIds.includes(id))
+  );
+
 
   const toggleExpand = (cat: FoodCategory) => {
     setExpanded(e => ({ ...e, [cat]: !e[cat] }));
