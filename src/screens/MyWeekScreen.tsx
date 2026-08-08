@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw, Settings, ChefHat, ShoppingCart, Shuffle } from 'lucide-react';
 import type { Lang } from '../data/translations';
 import type { FeedingMethod, ShoppingInput, ShoppingSection } from '../hooks/useAppStore';
 import { FOODS } from '../data/foods';
