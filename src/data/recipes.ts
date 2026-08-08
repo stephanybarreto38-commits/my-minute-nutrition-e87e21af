@@ -1266,3 +1266,191 @@ export function getRecipesByIngredients(availableFoodIds: string[]): Recipe[] {
     r.foodIds.every(id => availableFoodIds.includes(id))
   );
 }
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export const MEAL_TYPE_MAP: Record<string, MealType[]> = {
+
+  'avocado-blw': ['breakfast', 'snack'],
+
+  'avocado-pure': ['breakfast', 'lunch'],
+
+  'banana-blw': ['breakfast', 'snack'],
+
+  'banana-pure': ['breakfast', 'snack'],
+
+  'mango-blw': ['breakfast', 'snack'],
+
+  'mango-pure': ['breakfast', 'snack'],
+
+  'pear-steamed': ['breakfast', 'snack'],
+
+  'pear-pure': ['breakfast', 'snack'],
+
+  'peach-blw': ['breakfast', 'snack'],
+
+  'peach-pure': ['breakfast', 'snack'],
+
+  'apple-blw': ['breakfast', 'snack'],
+
+  'apple-pure': ['breakfast', 'snack'],
+
+  'papaya-blw': ['breakfast', 'snack'],
+
+  'papaya-pure': ['breakfast', 'snack'],
+
+  'watermelon-blw': ['snack'],
+
+  'blueberry-mashed': ['breakfast', 'snack'],
+
+  'plum-steamed': ['breakfast', 'snack'],
+
+  'kiwi-fresh': ['breakfast', 'snack'],
+
+  'melon-blw': ['snack'],
+
+  'pineapple-steamed': ['snack'],
+
+  'guava-pure': ['breakfast', 'snack'],
+
+  'carrot-blw': ['lunch', 'snack'],
+
+  'carrot-pure': ['lunch', 'dinner'],
+
+  'squash-blw': ['lunch', 'dinner'],
+
+  'squash-pure': ['lunch', 'dinner'],
+
+  'broccoli-blw': ['lunch', 'dinner'],
+
+  'broccoli-pure': ['lunch', 'dinner'],
+
+  'sweetpotato-blw': ['lunch', 'dinner', 'snack'],
+
+  'sweetpotato-pure': ['lunch', 'dinner'],
+
+  'cucumber-blw': ['lunch', 'snack'],
+
+  'cauliflower-pure': ['lunch', 'dinner'],
+
+  'chayote-steamed': ['lunch', 'dinner'],
+
+  'beet-pure': ['lunch', 'dinner'],
+
+  'corn-pure': ['lunch', 'dinner'],
+
+  'zucchini-steamed': ['lunch', 'dinner'],
+
+  'peas-pure': ['lunch', 'dinner'],
+
+  'greenbeans-steamed': ['lunch', 'dinner'],
+
+  'chicken-blw': ['lunch', 'dinner'],
+
+  'chicken-pure': ['lunch', 'dinner'],
+
+  'egg-scrambled': ['breakfast'],
+
+  'egg-pure': ['breakfast'],
+
+  'lentils-blw': ['lunch', 'dinner'],
+
+  'lentils-pure': ['lunch', 'dinner'],
+
+  'beef-ground': ['lunch', 'dinner'],
+
+  'salmon-blw': ['lunch', 'dinner'],
+
+  'salmon-pure': ['lunch', 'dinner'],
+
+  'blackbeans-mash': ['lunch', 'dinner'],
+
+  'chickpeas-hummus': ['lunch', 'snack'],
+
+  'tofu-soft': ['lunch', 'dinner', 'snack'],
+
+  'sardines-mashed': ['lunch', 'dinner'],
+
+  'turkey-shredded': ['lunch', 'dinner'],
+
+  'peanut-butter-diluted': ['breakfast', 'snack'],
+
+  'oats-porridge': ['breakfast'],
+
+  'oats-blw-pancake': ['breakfast'],
+
+  'potato-mash': ['lunch', 'dinner'],
+
+  'potato-blw': ['lunch', 'dinner'],
+
+  'rice-porridge': ['lunch', 'dinner'],
+
+  'quinoa-porridge': ['breakfast', 'lunch'],
+
+  'plantain-baked': ['breakfast', 'snack'],
+
+  'cassava-mash': ['lunch', 'dinner'],
+
+  'pasta-soft': ['lunch', 'dinner'],
+
+  'corn-tortilla-soft': ['lunch', 'dinner'],
+
+  'mango-banana': ['breakfast', 'snack'],
+
+  'banana-oats': ['breakfast'],
+
+  'apple-oats': ['breakfast'],
+
+  'pear-oats': ['breakfast'],
+
+  'chicken-rice': ['lunch', 'dinner'],
+
+  'chicken-potato': ['lunch', 'dinner'],
+
+  'chicken-sweetpotato': ['lunch', 'dinner'],
+
+  'broccoli-chicken': ['lunch', 'dinner'],
+
+  'broccoli-sweetpotato': ['lunch', 'dinner'],
+
+  'carrot-chicken': ['lunch', 'dinner'],
+
+  'lentils-carrot': ['lunch', 'dinner'],
+
+  'lentils-sweetpotato': ['lunch', 'dinner'],
+
+  'beef-potato': ['lunch', 'dinner'],
+
+  'chickpeas-carrot': ['lunch', 'snack'],
+
+  'egg-avocado': ['breakfast'],
+
+  'salmon-broccoli': ['lunch', 'dinner'],
+
+  'banana-avocado': ['breakfast', 'snack'],
+
+  'carrot-squash': ['lunch', 'dinner'],
+
+  'potato-chicken-carrot': ['lunch', 'dinner'],
+
+  'avocado-carrot-pure': ['lunch', 'dinner'],
+
+  'avocado-bread': ['breakfast'],
+
+  'plantain-blackbeans': ['lunch', 'dinner'],
+
+  'oats-banana-pear': ['breakfast'],
+
+  'tofu-broccoli': ['lunch', 'dinner'],
+
+  'quinoa-chicken': ['lunch', 'dinner'],
+
+  'rice-lentils': ['lunch', 'dinner'],
+
+};
+
+export function getRecipesByMealType(mealType: MealType): Recipe[] {
+
+  return RECIPES.filter(r => MEAL_TYPE_MAP[r.id]?.includes(mealType));
+
+}
