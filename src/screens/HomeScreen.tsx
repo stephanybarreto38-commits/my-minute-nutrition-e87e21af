@@ -3,9 +3,12 @@ import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
 import type { FoodLog, FoodCategory } from '../data/foods';
+import { getRecipesByMealType, type MealType } from '../data/recipes';
 import type { FeedingMethod, Screen } from '../hooks/useAppStore';
 import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
+import MealTypeNav from '../components/MealTypeNav';
+
 
 interface Props {
   lang: Lang;
