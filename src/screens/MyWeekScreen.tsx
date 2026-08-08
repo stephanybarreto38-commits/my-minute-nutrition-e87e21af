@@ -190,6 +190,8 @@ export default function MyWeekScreen({
   const commonAllergens = useMemo(() => FOODS.filter(f => f.isAllergen), []);
 
   const [swapFor, setSwapFor] = useState<{ day: number; meal: number } | null>(null);
+  const todayIndex = useMemo(() => (new Date().getDay() + 6) % 7, []);
+  const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
   const [addedToast, setAddedToast] = useState(false);
 
   const [previewOpen, setPreviewOpen] = useState(false);
