@@ -36,10 +36,10 @@ export default function App() {
       <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
 
         {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
-        <aside className="hidden md:flex flex-col w-56 bg-orange-400 text-white flex-shrink-0">
-          <div className="px-5 pt-7 pb-6 border-b border-orange-300/50">
+        <aside className="hidden md:flex flex-col w-56 bg-orange-300 text-white flex-shrink-0">
+          <div className="px-5 pt-7 pb-6 border-b border-orange-200/50">
             <p className="text-xl font-semibold tracking-tight">🥑 Little Meal</p>
-            <p className="text-[11px] text-orange-100 mt-0.5">
+            <p className="text-[11px] text-orange-50/90 mt-0.5">
               {store.baby.name ? `Hola, ${store.baby.name} 👶` : 'Alimentación saludable'}
             </p>
           </div>
@@ -62,8 +62,8 @@ export default function App() {
                       onClick={() => store.navigateTo(item.screen)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left ${
                         active
-                          ? 'bg-white/25 text-white font-medium shadow-sm'
-                          : 'text-orange-50 hover:bg-white/15 hover:text-white'
+                          ? 'bg-white/30 text-white font-medium shadow-sm'
+                          : 'text-orange-50/90 hover:bg-white/20 hover:text-white'
                       }`}
                     >
                       <span className="text-base">{item.emoji}</span>
@@ -80,8 +80,8 @@ export default function App() {
                 onClick={() => store.navigateTo('admin')}
                 className={`w-full text-[11px] border rounded-lg py-1.5 transition-colors ${
                   store.screen === 'admin'
-                    ? 'bg-white/20 text-white border-white/30'
-                    : 'text-amber-100 border-amber-300/70 hover:bg-amber-500/40'
+                    ? 'bg-white/25 text-white border-white/30'
+                    : 'text-amber-50 border-amber-200/70 hover:bg-amber-400/40'
                 }`}
               >
                 ⚙️ {store.lang === 'es' ? 'Panel Admin' : 'Admin Panel'}
@@ -89,14 +89,14 @@ export default function App() {
             )}
             <button
               onClick={handleLangToggle}
-              className="w-full text-[11px] text-orange-100 border border-orange-300/50 rounded-lg py-1.5 hover:bg-orange-300/30 transition-colors"
+              className="w-full text-[11px] text-orange-50/90 border border-orange-200/50 rounded-lg py-1.5 hover:bg-orange-200/30 transition-colors"
             >
               {store.lang === 'es' ? '🇺🇸 English' : '🇨🇴 Español'}
             </button>
             {store.userEmail && (
               <button
                 onClick={store.logoutUser}
-                className="w-full text-[11px] text-orange-100 hover:text-white transition-colors py-1"
+                className="w-full text-[11px] text-orange-50/80 hover:text-white transition-colors py-1"
               >
                 {store.lang === 'es' ? '↩ Cerrar sesión' : '↩ Sign out'}
               </button>
