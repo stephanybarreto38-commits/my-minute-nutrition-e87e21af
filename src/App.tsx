@@ -36,11 +36,18 @@ export default function App() {
       <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
 
         {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
-        <aside className="hidden md:flex flex-col w-56 bg-orange-300 text-white flex-shrink-0">
-          <div className="px-5 pt-7 pb-6 border-b border-orange-200/50">
-            <p className="text-xl font-semibold tracking-tight">🥑 Little Meal</p>
-            <p className="text-[11px] text-orange-50/90 mt-0.5">
-              {store.baby.name ? `Hola, ${store.baby.name} 👶` : 'Alimentación saludable'}
+        <aside
+          className="hidden md:flex flex-col w-56 bg-emerald-50 border-r border-emerald-100 text-emerald-900 flex-shrink-0 relative overflow-hidden"
+          style={{ fontFamily: "'Quicksand', sans-serif" }}
+        >
+          {/* Decorative background blobs */}
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-100/40 rounded-full blur-2xl" />
+          <div className="absolute bottom-20 -left-10 w-40 h-40 bg-white/60 rounded-full blur-2xl" />
+
+          <div className="relative z-10 px-5 pt-7 pb-6 border-b border-emerald-200/50">
+            <p className="text-xl font-bold tracking-tight">🥑 Little Meal</p>
+            <p className="text-[11px] text-emerald-700/70 mt-0.5">
+              {store.baby.name ? `${store.lang === 'es' ? 'Hola' : 'Hi'}, ${store.baby.name} 👶` : (store.lang === 'es' ? 'Alimentación saludable' : 'Healthy eating')}
             </p>
           </div>
           {store.screen !== 'onboarding' && store.screen !== 'login' && (() => {
@@ -53,7 +60,7 @@ export default function App() {
               { screen: 'profile' as const,        emoji: '👤', label: store.lang === 'es' ? 'Perfil' : 'Profile' },
             ];
             return (
-              <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
+              <nav className="relative z-10 flex flex-col gap-1 px-3 py-4 flex-1">
                 {NAV.map(item => {
                   const active = store.screen === item.screen || (item.screen === 'home' && store.screen === 'food-detail');
                   return (
@@ -62,8 +69,8 @@ export default function App() {
                       onClick={() => store.navigateTo(item.screen)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left ${
                         active
-                          ? 'bg-white/30 text-white font-medium shadow-sm'
-                          : 'text-orange-50/90 hover:bg-white/20 hover:text-white'
+                          ? 'bg-white text-emerald-600 font-bold shadow-sm border border-emerald-100/50'
+                          : 'text-emerald-700/70 hover:bg-emerald-100/50 hover:text-emerald-600'
                       }`}
                     >
                       <span className="text-base">{item.emoji}</span>
@@ -74,14 +81,14 @@ export default function App() {
               </nav>
             );
           })()}
-          <div className="px-4 pb-5 flex flex-col gap-2">
+          <div className="relative z-10 px-4 pb-5 flex flex-col gap-2 border-t border-emerald-200/50 pt-4">
             {store.isAdmin && store.screen !== 'login' && store.screen !== 'onboarding' && (
               <button
                 onClick={() => store.navigateTo('admin')}
                 className={`w-full text-[11px] border rounded-lg py-1.5 transition-colors ${
                   store.screen === 'admin'
-                    ? 'bg-white/25 text-white border-white/30'
-                    : 'text-amber-50 border-amber-200/70 hover:bg-amber-400/40'
+                    ? 'bg-white text-emerald-600 border-emerald-200 font-semibold'
+                    : 'text-emerald-700/70 border-emerald-200/70 hover:bg-emerald-100/50 hover:text-emerald-600'
                 }`}
               >
                 ⚙️ {store.lang === 'es' ? 'Panel Admin' : 'Admin Panel'}
@@ -89,14 +96,14 @@ export default function App() {
             )}
             <button
               onClick={handleLangToggle}
-              className="w-full text-[11px] text-orange-50/90 border border-orange-200/50 rounded-lg py-1.5 hover:bg-orange-200/30 transition-colors"
+              className="w-full text-[11px] text-emerald-700/80 border border-emerald-200/50 rounded-lg py-1.5 hover:bg-emerald-100/40 transition-colors"
             >
               {store.lang === 'es' ? '🇺🇸 English' : '🇨🇴 Español'}
             </button>
             {store.userEmail && (
               <button
                 onClick={store.logoutUser}
-                className="w-full text-[11px] text-orange-50/80 hover:text-white transition-colors py-1"
+                className="w-full text-[11px] text-red-500/80 hover:bg-red-50 transition-colors py-1.5 rounded-lg"
               >
                 {store.lang === 'es' ? '↩ Cerrar sesión' : '↩ Sign out'}
               </button>
