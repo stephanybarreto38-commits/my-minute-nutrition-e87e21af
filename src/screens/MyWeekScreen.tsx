@@ -49,7 +49,7 @@ type Signal = 'ready' | 'soon' | 'avoid' | 'unknown';
 function foodSignal(foodId: string, ageMonths: number): Signal {
   const f = FOODS.find(x => x.id === foodId);
   if (!f) return 'unknown';
-  if (f.status === 'avoid') return 'avoid';
+  if (f.status === 'avoid' && f.fromMonths > ageMonths) return 'avoid';
   if (f.fromMonths <= ageMonths) return 'ready';
   if (f.fromMonths <= ageMonths + 2) return 'soon';
   return 'avoid';
