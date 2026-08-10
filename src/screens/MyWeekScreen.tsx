@@ -658,7 +658,7 @@ function SwapSheet(props: {
     ];
     for (const f of FOODS) {
       if (recipeFoodIds.has(f.id)) continue;
-      if (f.status === 'avoid') continue;
+      if (f.status === 'avoid' && f.fromMonths > plan.config.ageMonths) continue;
       if (f.fromMonths > plan.config.ageMonths + 2) continue;
       if (plan.config.allergies.includes(f.id)) continue;
       const g = groups.find(x => x.key === f.category) ?? groups[groups.length - 1];
