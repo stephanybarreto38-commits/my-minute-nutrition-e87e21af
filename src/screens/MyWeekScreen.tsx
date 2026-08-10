@@ -49,7 +49,7 @@ type Signal = 'ready' | 'soon' | 'avoid' | 'unknown';
 function foodSignal(foodId: string, ageMonths: number): Signal {
   const f = FOODS.find(x => x.id === foodId);
   if (!f) return 'unknown';
-  if (f.status === 'avoid') return 'avoid';
+  if (f.status === 'avoid' && f.fromMonths > ageMonths) return 'avoid';
   if (f.fromMonths <= ageMonths) return 'ready';
   if (f.fromMonths <= ageMonths + 2) return 'soon';
   return 'avoid';
@@ -82,6 +82,7 @@ function eligibleRecipes(cfg: WeekConfig): Recipe[] {
   const allergySet = new Set(cfg.allergies);
   return RECIPES.filter(r => {
     if (!r.methodBadges.includes(cfg.method)) return false;
+    if (r.minMonths != null && cfg.ageMonths < r.minMonths) return false;
     if (r.foodIds.some(id => allergySet.has(id))) return false;
     const sig = recipeSignal(r, cfg.ageMonths);
     return sig === 'ready' || sig === 'soon';
@@ -657,7 +658,7 @@ function SwapSheet(props: {
     ];
     for (const f of FOODS) {
       if (recipeFoodIds.has(f.id)) continue;
-      if (f.status === 'avoid') continue;
+      if (f.status === 'avoid' && f.fromMonths > plan.config.ageMonths) continue;
       if (f.fromMonths > plan.config.ageMonths + 2) continue;
       if (plan.config.allergies.includes(f.id)) continue;
       const g = groups.find(x => x.key === f.category) ?? groups[groups.length - 1];

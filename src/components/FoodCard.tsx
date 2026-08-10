@@ -20,8 +20,8 @@ const REACTION_EMOJI: Record<string, string> = {
 export default function FoodCard({ food, log, lang, babyMonths, onClick }: Props) {
   const tx = t[lang];
   const tried = log?.tried ?? false;
-  const isAvoid = food.status === 'avoid';
-  const canEatNow = !isAvoid && food.fromMonths <= babyMonths;
+  const isAvoid = food.status === 'avoid' && food.fromMonths > babyMonths;
+  const canEatNow = food.fromMonths <= babyMonths;
   const name = lang === 'es' ? food.nameEs : food.nameEn;
 
   // Priority: tried > avoid > canEatNow > coming soon
