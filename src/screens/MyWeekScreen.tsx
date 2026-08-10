@@ -118,11 +118,10 @@ function buildGrid(cfg: WeekConfig): (Cell | null)[][] {
   return grid;
 }
 
-const DAIRY_IDS = new Set<string>(['yogurt', 'cheese', 'milk', 'butter']);
 function foodSection(foodId: string): Section {
-  if (DAIRY_IDS.has(foodId)) return 'dairy';
   const f = FOODS.find(x => x.id === foodId);
   if (!f) return 'pantry';
+  if (f.category === 'dairy') return 'dairy';
   if (f.category === 'fruits' || f.category === 'vegetables') return 'produce';
   if (f.category === 'proteins') return 'protein';
   return 'pantry';

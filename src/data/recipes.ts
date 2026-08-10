@@ -1512,6 +1512,124 @@ export const RECIPES: Recipe[] = [
     adultIngredientsEs: ['Queso de cabra', 'Miel', 'Nueces', 'Vinagre balsámico'],
     adultIngredientsEn: ['Goat cheese', 'Honey', 'Walnuts', 'Balsamic vinegar'],
   },
+  // ── NUEVAS RECETAS (lácteos y alimentos nuevos) ─────────────────────────
+  {
+    id: 'yogurt-passionfruit-oats',
+    foodIds: ['yogurt', 'passionfruit', 'oats'],
+    titleEs: 'Yogur con maracuyá y avena',
+    titleEn: 'Yogurt with passion fruit and oats',
+    timeMin: 5, method: 'raw', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Cocinar 2 cucharadas de avena en agua hasta que quede muy blanda y dejar entibiar', 'Mezclar con yogur natural sin azúcar', 'Colar la pulpa de maracuyá para retirar las semillas y añadir 1 cucharadita'],
+    stepsEn: ['Cook 2 tbsp oats in water until very soft and let cool', 'Mix with plain unsweetened yogurt', 'Strain passion fruit pulp to remove seeds and add 1 tsp'],
+    adultVersionEs: 'Bowl de yogur griego con avena tostada, maracuyá entera y miel.',
+    adultVersionEn: 'Greek yogurt bowl with toasted oats, whole passion fruit and honey.',
+    adultIngredientsEs: ['Yogur griego', 'Avena', 'Maracuyá', 'Miel'],
+    adultIngredientsEn: ['Greek yogurt', 'Oats', 'Passion fruit', 'Honey'],
+  },
+  {
+    id: 'eggplant-hummus-sticks',
+    foodIds: ['eggplant', 'hummus'],
+    titleEs: 'Palitos de berenjena asada con hummus',
+    titleEn: 'Roasted eggplant sticks with hummus',
+    timeMin: 25, method: 'bake', methodBadges: ['BLW'],
+    stepsEs: ['Cortar la berenjena en bastones del tamaño de un dedo adulto, con piel para dar agarre', 'Pincelar con aceite de oliva y hornear a 200°C 20 min hasta que se aplasten con los dedos', 'Servir tibios con una cucharada de hummus sin sal para mojar'],
+    stepsEn: ['Cut eggplant into adult-finger-sized sticks, skin on for grip', 'Brush with olive oil and bake at 200°C for 20 min until squishable', 'Serve warm with a spoonful of unsalted hummus for dipping'],
+    adultVersionEs: 'Berenjena asada con hummus, za\'atar, limón y aceite de oliva.',
+    adultVersionEn: 'Roasted eggplant with hummus, za\'atar, lemon and olive oil.',
+    adultIngredientsEs: ['Berenjena', 'Hummus', 'Za\'atar', 'Limón'],
+    adultIngredientsEn: ['Eggplant', 'Hummus', 'Za\'atar', 'Lemon'],
+  },
+  {
+    id: 'whitefish-chard-sweetpotato',
+    foodIds: ['whitefish', 'chard', 'sweetpotato'],
+    titleEs: 'Pescado blanco con puré de acelga y batata',
+    titleEn: 'White fish with chard and sweet potato purée',
+    timeMin: 20, method: 'steam', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Cocinar la batata al vapor 15 min y la acelga 5 min hasta que estén muy blandas', 'Cocinar el pescado blanco al vapor 8 min y revisar con los dedos que no queden espinas', 'Aplastar todo junto con un poco del agua de cocción hasta la textura deseada'],
+    stepsEn: ['Steam sweet potato 15 min and chard 5 min until very soft', 'Steam white fish 8 min and check with fingers that no bones remain', 'Mash everything together with a little cooking water to desired texture'],
+    adultVersionEs: 'Pescado blanco al horno con acelga salteada al ajo y puré de batata especiado.',
+    adultVersionEn: 'Baked white fish with garlic-sautéed chard and spiced sweet potato mash.',
+    adultIngredientsEs: ['Pescado blanco', 'Acelga', 'Batata', 'Ajo'],
+    adultIngredientsEn: ['White fish', 'Swiss chard', 'Sweet potato', 'Garlic'],
+  },
+  {
+    id: 'cheese-grape-toast',
+    foodIds: ['cheese', 'grape', 'bread'],
+    titleEs: 'Tostada con queso fresco y uvas en cuartos',
+    titleEn: 'Toast with fresh cheese and quartered grapes',
+    timeMin: 5, method: 'raw', methodBadges: ['BLW'],
+    stepsEs: ['Tostar ligeramente el pan y cortarlo en bastones para que pueda agarrarlo', 'Aplastar el queso fresco bajo en sodio y untarlo en capa fina', 'Cortar cada uva en cuartos a lo largo — nunca entera ni en mitades'],
+    stepsEn: ['Lightly toast the bread and cut into sticks for easy grip', 'Mash low-sodium fresh cheese and spread in a thin layer', 'Cut each grape lengthwise into quarters — never whole or halved'],
+    adultVersionEs: 'Tostada de queso fresco con uvas, nueces y un hilo de miel.',
+    adultVersionEn: 'Fresh cheese toast with grapes, walnuts and a drizzle of honey.',
+    adultIngredientsEs: ['Queso fresco', 'Uvas', 'Nueces', 'Miel'],
+    adultIngredientsEn: ['Fresh cheese', 'Grapes', 'Walnuts', 'Honey'],
+  },
+  {
+    id: 'rice-chicken-mushroom',
+    foodIds: ['mushroom', 'chicken', 'rice'],
+    titleEs: 'Arroz con pollo y champiñones',
+    titleEn: 'Rice with chicken and mushrooms',
+    timeMin: 25, method: 'saute', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Saltear los champiñones bien picados finamente hasta que estén muy cocidos', 'Cocinar el pollo y el arroz hasta que estén muy blandos, sin sal', 'Mezclar y aplastar o picar según la textura que maneje el bebé'],
+    stepsEn: ['Sauté finely chopped mushrooms until thoroughly cooked', 'Cook chicken and rice until very soft, no salt', 'Mix and mash or chop depending on baby texture stage'],
+    adultVersionEs: 'Arroz cremoso con pollo, champiñones, tomillo y parmesano.',
+    adultVersionEn: 'Creamy rice with chicken, mushrooms, thyme and parmesan.',
+    adultIngredientsEs: ['Champiñones', 'Tomillo', 'Parmesano', 'Caldo de pollo'],
+    adultIngredientsEn: ['Mushrooms', 'Thyme', 'Parmesan', 'Chicken stock'],
+  },
+  {
+    id: 'oats-milk-banana',
+    foodIds: ['milk', 'oats', 'banana'],
+    titleEs: 'Avena con leche y plátano',
+    titleEn: 'Oats with milk and banana',
+    timeMin: 10, method: 'boil', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Cocinar la avena con leche entera hasta que quede cremosa y muy blanda', 'Aplastar el plátano maduro y mezclar sin añadir azúcar', 'Usar la leche solo en la preparación, no como bebida principal antes de los 12 meses'],
+    stepsEn: ['Cook oats with whole milk until creamy and very soft', 'Mash ripe banana and stir in, no added sugar', 'Use milk only in cooking, not as a main drink before 12 months'],
+    adultVersionEs: 'Porridge de avena con plátano caramelizado, canela y mantequilla de maní.',
+    adultVersionEn: 'Oat porridge with caramelized banana, cinnamon and peanut butter.',
+    adultIngredientsEs: ['Avena', 'Leche', 'Canela', 'Mantequilla de maní'],
+    adultIngredientsEn: ['Oats', 'Milk', 'Cinnamon', 'Peanut butter'],
+  },
+  {
+    id: 'kefir-mango-smoothie',
+    foodIds: ['kefir', 'mango'],
+    titleEs: 'Batido de kéfir con mango',
+    titleEn: 'Kefir and mango smoothie',
+    timeMin: 5, method: 'raw', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Licuar mango maduro con kéfir natural sin azúcar hasta que quede suave', 'Servir espeso, en vaso abierto o con cuchara para practicar', 'Ideal desde los 9 meses como merienda fresca'],
+    stepsEn: ['Blend ripe mango with plain unsweetened kefir until smooth', 'Serve thick, in an open cup or with a spoon for practice', 'Great from 9 months as a fresh snack'],
+    adultVersionEs: 'Smoothie de kéfir, mango, jengibre y semillas de chía.',
+    adultVersionEn: 'Kefir, mango, ginger and chia seed smoothie.',
+    adultIngredientsEs: ['Kéfir', 'Mango', 'Jengibre', 'Semillas de chía'],
+    adultIngredientsEn: ['Kefir', 'Mango', 'Ginger', 'Chia seeds'],
+  },
+  {
+    id: 'almondbutter-banana-toast',
+    foodIds: ['almondbutter', 'bread', 'banana'],
+    titleEs: 'Tostada con mantequilla de almendra y banana',
+    titleEn: 'Almond butter and banana toast',
+    timeMin: 5, method: 'raw', methodBadges: ['BLW'],
+    stepsEs: ['Tostar el pan y cortarlo en bastones fáciles de agarrar', 'Untar la mantequilla de almendra en capa MUY fina — nunca en cucharadas ni trozos espesos', 'Colocar encima rodajas finas de banana bien madura'],
+    stepsEn: ['Toast the bread and cut into easy-to-grip sticks', 'Spread almond butter in a VERY thin layer — never in spoonfuls or thick blobs', 'Top with thin slices of very ripe banana'],
+    adultVersionEs: 'Tostada integral con mantequilla de almendra, banana, canela y semillas.',
+    adultVersionEn: 'Whole grain toast with almond butter, banana, cinnamon and seeds.',
+    adultIngredientsEs: ['Mantequilla de almendra', 'Pan integral', 'Canela', 'Semillas de girasol'],
+    adultIngredientsEn: ['Almond butter', 'Whole grain bread', 'Cinnamon', 'Sunflower seeds'],
+  },
+  {
+    id: 'date-oat-puree',
+    foodIds: ['date', 'oats'],
+    titleEs: 'Puré de dátil con avena',
+    titleEn: 'Date and oat purée',
+    timeMin: 10, method: 'boil', methodBadges: ['BLISS', 'Purés'],
+    stepsEs: ['Retirar el hueso del dátil y remojarlo en agua caliente 10 min', 'Licuar o aplastar hasta obtener un puré liso, sin trozos', 'Mezclar con avena cocida — servir con cuchara, nunca en forma de bolita'],
+    stepsEn: ['Remove the pit and soak the date in hot water for 10 min', 'Blend or mash into a smooth purée with no chunks', 'Mix with cooked oats — serve with a spoon, never shaped into balls'],
+    adultVersionEs: 'Porridge de avena con pasta de dátil, cardamomo y almendras tostadas.',
+    adultVersionEn: 'Oat porridge with date paste, cardamom and toasted almonds.',
+    adultIngredientsEs: ['Dátiles', 'Avena', 'Cardamomo', 'Almendras'],
+    adultIngredientsEn: ['Dates', 'Oats', 'Cardamom', 'Almonds'],
+  },
 ];
 
 export function getRecipesByFoodId(foodId: string): Recipe[] {
@@ -1528,6 +1646,25 @@ export function getRecipesByIngredients(availableFoodIds: string[]): Recipe[] {
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 export const MEAL_TYPE_MAP: Record<string, MealType[]> = {
+
+  'yogurt-passionfruit-oats': ['breakfast'],
+
+  'eggplant-hummus-sticks': ['snack', 'lunch'],
+
+  'whitefish-chard-sweetpotato': ['lunch', 'dinner'],
+
+  'cheese-grape-toast': ['snack'],
+
+  'rice-chicken-mushroom': ['lunch', 'dinner'],
+
+  'oats-milk-banana': ['breakfast'],
+
+  'kefir-mango-smoothie': ['snack'],
+
+  'almondbutter-banana-toast': ['breakfast', 'snack'],
+
+  'date-oat-puree': ['breakfast', 'snack'],
+
 
   'avocado-blw': ['breakfast', 'snack'],
 

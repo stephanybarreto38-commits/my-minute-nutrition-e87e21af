@@ -43,6 +43,16 @@ export default function FoodCard({ food, log, lang, babyMonths, onClick }: Props
         </span>
       )}
 
+      {food.chokingRisk && food.flags?.length ? (
+        <span
+          title={food.flags[0]}
+          className="absolute top-1 left-1 text-[9px] leading-none"
+          aria-label={food.flags[0]}
+        >
+          ⚠️
+        </span>
+      ) : null}
+
       <span className="text-2xl leading-none mb-1">{food.emoji}</span>
       <span className="text-[10px] text-gray-800 leading-tight font-medium">
         {name}{food.isAllergen ? '*' : ''}

@@ -18,6 +18,11 @@ interface Props {
 
 type Tab = 'prep' | 'menu' | 'log';
 
+const ALLERGEN_NOTE: Record<Lang, string> = {
+  es: 'Introducir de a uno, en cantidad pequeña, y observar 2-3 días antes de combinar con otro alérgeno nuevo.',
+  en: 'Introduce one at a time, in a small amount, and watch for 2-3 days before combining with another new allergen.',
+};
+
 const REACTION_SELECTED: Record<string, string> = {
   loved:    'border-green-500 bg-green-50 text-green-900',
   normal:   'border-blue-400 bg-blue-50 text-blue-900',
@@ -169,6 +174,24 @@ export default function FoodDetailScreen({
                 ))}
               </ol>
             </div>
+
+            {/* Safety / prep notes */}
+            {(food.flags?.length || food.isAllergen) && (
+              <div className="mx-4 my-2 space-y-2">
+                {food.flags?.map((flag, i) => (
+                  <div key={i} className="flex gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                    <span className="text-amber-500 flex-shrink-0 text-sm">⚠️</span>
+                    <p className="text-[12px] text-amber-900 leading-snug">{flag}</p>
+                  </div>
+                ))}
+                {food.isAllergen && (
+                  <div className="flex gap-2 bg-red-50 border border-red-100 rounded-xl p-3">
+                    <span className="text-red-500 flex-shrink-0 text-sm">*</span>
+                    <p className="text-[12px] text-red-800 leading-snug">{ALLERGEN_NOTE[lang]}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Cook time note */}
             <div className="mx-4 my-2 flex gap-2 bg-red-50 border border-red-100 rounded-xl p-3">

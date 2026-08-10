@@ -1,4 +1,4 @@
-export type FoodCategory = 'fruits' | 'vegetables' | 'proteins' | 'grains';
+export type FoodCategory = 'fruits' | 'vegetables' | 'proteins' | 'grains' | 'dairy';
 export type FoodStatus = 'available' | 'new' | 'avoid';
 export type Reaction = 'loved' | 'normal' | 'disliked' | 'reaction' | null;
 
@@ -32,57 +32,57 @@ export const FOODS: Food[] = [
   { id: 'papaya',      emoji: '🍈', nameEs: 'Papaya',       nameEn: 'Papaya',        category: 'fruits',     fromMonths: 6,  status: 'new',       isAllergen: false, chokingRisk: false, laxative: true },
   { id: 'pear',        emoji: '🍐', nameEs: 'Pera',         nameEn: 'Pear',          category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'peach',       emoji: '🍑', nameEs: 'Durazno',      nameEn: 'Peach',         category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'apple',       emoji: '🍎', nameEs: 'Manzana',      nameEn: 'Apple',         category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
+  { id: 'apple',       emoji: '🍎', nameEs: 'Manzana',      nameEn: 'Apple',         category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Cruda: rallar o cocinar hasta que esté blanda; nunca en trozos duros'] },
   { id: 'watermelon',  emoji: '🍉', nameEs: 'Sandía',       nameEn: 'Watermelon',    category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'blueberry',   emoji: '🫐', nameEs: 'Arándanos',    nameEn: 'Blueberries',   category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true },
+  { id: 'blueberry',   emoji: '🫐', nameEs: 'Arándanos',    nameEn: 'Blueberries',   category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Cortar por la mitad o en cuartos, nunca entero'] },
   { id: 'plum',        emoji: '🍑', nameEs: 'Ciruela',      nameEn: 'Plum',          category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false, laxative: true },
   { id: 'kiwi',        emoji: '🥝', nameEs: 'Kiwi',         nameEn: 'Kiwi',          category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false },
   { id: 'melon',       emoji: '🍈', nameEs: 'Melón',        nameEn: 'Melon',         category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'pineapple',   emoji: '🍍', nameEs: 'Piña',         nameEn: 'Pineapple',     category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'orange',      emoji: '🍊', nameEs: 'Naranja',      nameEn: 'Orange',        category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'guava',       emoji: '🍐', nameEs: 'Guayaba',      nameEn: 'Guava',         category: 'fruits',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'raspberry',   emoji: '🍒', nameEs: 'Frambuesa',    nameEn: 'Raspberry',     category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: true },
+  { id: 'raspberry',   emoji: '🍒', nameEs: 'Frambuesa',    nameEn: 'Raspberry',     category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Aplastar un poco para los más pequeños'] },
   { id: 'fig',         emoji: '🍑', nameEs: 'Higo',         nameEn: 'Fig',           category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'persimmon',   emoji: '🍊', nameEs: 'Caqui',        nameEn: 'Persimmon',     category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'strawberry',  emoji: '🍓', nameEs: 'Fresa',        nameEn: 'Strawberry',    category: 'fruits',     fromMonths: 12, status: 'avoid',     isAllergen: true,  chokingRisk: false },
 
   // ── VEGETABLES ────────────────────────────────────────────────────
-  { id: 'carrot',      emoji: '🥕', nameEs: 'Zanahoria',    nameEn: 'Carrot',        category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true },
+  { id: 'carrot',      emoji: '🥕', nameEs: 'Zanahoria',    nameEn: 'Carrot',        category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Cocinar hasta que se aplaste con los dedos; cortar en bastones, no en rodajas'] },
   { id: 'squash',      emoji: '🎃', nameEs: 'Calabaza',     nameEn: 'Squash',        category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'broccoli',    emoji: '🥦', nameEs: 'Brócoli',      nameEn: 'Broccoli',      category: 'vegetables', fromMonths: 6,  status: 'new',       isAllergen: false, chokingRisk: true },
+  { id: 'broccoli',    emoji: '🥦', nameEs: 'Brócoli',      nameEn: 'Broccoli',      category: 'vegetables', fromMonths: 6,  status: 'new',       isAllergen: false, chokingRisk: true, flags: ['Cocinar muy suave; servir el ramillete completo con el tallo como agarre'] },
   { id: 'sweetpotato', emoji: '🍠', nameEs: 'Batata',       nameEn: 'Sweet potato',  category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'cucumber',    emoji: '🥒', nameEs: 'Pepino',       nameEn: 'Cucumber',      category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true },
+  { id: 'cucumber',    emoji: '🥒', nameEs: 'Pepino',       nameEn: 'Cucumber',      category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Pelar y cortar en bastones largos, no en rodajas'] },
   { id: 'cauliflower', emoji: '🥦', nameEs: 'Coliflor',     nameEn: 'Cauliflower',   category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'chayote',     emoji: '🫑', nameEs: 'Chayote',      nameEn: 'Chayote',       category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'beet',        emoji: '🫐', nameEs: 'Remolacha',    nameEn: 'Beet',          category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'asparagus',   emoji: '🌿', nameEs: 'Espárragos',   nameEn: 'Asparagus',     category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'corn',        emoji: '🌽', nameEs: 'Maíz',         nameEn: 'Corn',          category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
+  { id: 'corn',        emoji: '🌽', nameEs: 'Maíz',         nameEn: 'Corn',          category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Servir la mazorca entera para roer, o los granos bien aplastados — sueltos y enteros son riesgo de atragantamiento'] },
   { id: 'bellpepper',  emoji: '🫑', nameEs: 'Pimiento',     nameEn: 'Bell pepper',   category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'tomato',      emoji: '🍅', nameEs: 'Tomate',       nameEn: 'Tomato',        category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'zucchini',    emoji: '🥒', nameEs: 'Zucchini',     nameEn: 'Zucchini',      category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'artichoke',   emoji: '🌿', nameEs: 'Alcachofa',    nameEn: 'Artichoke',     category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'nopal',       emoji: '🌵', nameEs: 'Nopal',        nameEn: 'Nopal',         category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'greenbeans',  emoji: '🫛', nameEs: 'Habichuelas',  nameEn: 'Green beans',   category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'peas',        emoji: '🫛', nameEs: 'Arvejas',      nameEn: 'Peas',          category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true },
+  { id: 'peas',        emoji: '🫛', nameEs: 'Arvejas',      nameEn: 'Peas',          category: 'vegetables', fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: true, flags: ['Aplastar — enteras pueden atascarse'] },
   { id: 'spinach',     emoji: '🥬', nameEs: 'Espinacas',    nameEn: 'Spinach',       category: 'vegetables', fromMonths: 12, status: 'avoid',     isAllergen: false, chokingRisk: false },
-  { id: 'celery',      emoji: '🌱', nameEs: 'Apio',         nameEn: 'Celery',        category: 'vegetables', fromMonths: 12, status: 'avoid',     isAllergen: false, chokingRisk: true },
+  { id: 'celery',      emoji: '🌱', nameEs: 'Apio',         nameEn: 'Celery',        category: 'vegetables', fromMonths: 12, status: 'avoid',     isAllergen: false, chokingRisk: true, flags: ['Cocinar bien blando y picar finamente'] },
 
   // ── PROTEINS ──────────────────────────────────────────────────────
   { id: 'chicken',     emoji: '🍗', nameEs: 'Pollo',        nameEn: 'Chicken',       category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'egg',         emoji: '🥚', nameEs: 'Huevo',        nameEn: 'Egg',           category: 'proteins',   fromMonths: 6,  status: 'new',       isAllergen: true,  chokingRisk: false },
+  { id: 'egg',         emoji: '🥚', nameEs: 'Huevo',        nameEn: 'Egg',           category: 'proteins',   fromMonths: 6,  status: 'new',       isAllergen: true,  chokingRisk: false, flags: ['Cocinar completamente; evitar clara o yema líquida'] },
   { id: 'lentils',     emoji: '🫘', nameEs: 'Lentejas',     nameEn: 'Lentils',       category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'beef',        emoji: '🥩', nameEs: 'Res',          nameEn: 'Beef',          category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'salmon',      emoji: '🐟', nameEs: 'Salmón',       nameEn: 'Salmon',        category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false },
+  { id: 'salmon',      emoji: '🐟', nameEs: 'Salmón',       nameEn: 'Salmon',        category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Revisar bien que no tenga espinas'] },
   { id: 'blackbeans',  emoji: '🫘', nameEs: 'Frijoles negros', nameEn: 'Black beans', category: 'proteins',  fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'pork',        emoji: '🥩', nameEs: 'Cerdo',        nameEn: 'Pork',          category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'chickpeas',   emoji: '🫘', nameEs: 'Garbanzos',    nameEn: 'Chickpeas',     category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'tofu',        emoji: '🍱', nameEs: 'Tofu',         nameEn: 'Tofu',          category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: false },
-  { id: 'edamame',     emoji: '🫛', nameEs: 'Edamame',      nameEn: 'Edamame',       category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: true },
-  { id: 'sardines',    emoji: '🐟', nameEs: 'Sardinas',     nameEn: 'Sardines',      category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false },
-  { id: 'mackerel',    emoji: '🐠', nameEs: 'Macarela',     nameEn: 'Mackerel',      category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false },
+  { id: 'edamame',     emoji: '🫛', nameEs: 'Edamame',      nameEn: 'Edamame',       category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: true, flags: ['Sacar de la vaina y aplastar; nunca servir en la vaina'] },
+  { id: 'sardines',    emoji: '🐟', nameEs: 'Sardinas',     nameEn: 'Sardines',      category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Revisar bien que no tenga espinas'] },
+  { id: 'mackerel',    emoji: '🐠', nameEs: 'Macarela',     nameEn: 'Mackerel',      category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Revisar bien que no tenga espinas'] },
   { id: 'lamb',        emoji: '🥩', nameEs: 'Cordero',      nameEn: 'Lamb',          category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'turkey',      emoji: '🍗', nameEs: 'Pavo',         nameEn: 'Turkey',        category: 'proteins',   fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
-  { id: 'peanut',      emoji: '🥜', nameEs: 'Maní',         nameEn: 'Peanut',        category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: true },
+  { id: 'peanut',      emoji: '🥜', nameEs: 'Maní',         nameEn: 'Peanut',        category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: true, flags: ['Solo como mantequilla suave y bien diluida; nunca entero ni en cucharadas espesas'] },
 
   // ── GRAINS & STARCHES ─────────────────────────────────────────────
   { id: 'rice',        emoji: '🍚', nameEs: 'Arroz',        nameEn: 'Rice',          category: 'grains',     fromMonths: 6,  status: 'available', isAllergen: false, chokingRisk: false },
@@ -96,6 +96,21 @@ export const FOODS: Food[] = [
   { id: 'wheat',       emoji: '🌾', nameEs: 'Trigo',        nameEn: 'Wheat',         category: 'grains',     fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false },
   { id: 'taro',        emoji: '🥔', nameEs: 'Taro',         nameEn: 'Taro',          category: 'grains',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
   { id: 'corn-tortilla', emoji: '🫓', nameEs: 'Tortilla de maíz', nameEn: 'Corn tortilla', category: 'grains', fromMonths: 8, status: 'available', isAllergen: false, chokingRisk: false },
+  { id: 'passionfruit', emoji: '🟡', nameEs: 'Maracuyá',         nameEn: 'Passion fruit', category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false, laxative: true },
+  { id: 'grape',        emoji: '🍇', nameEs: 'Uva',               nameEn: 'Grape',         category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: true,  flags: ['Cortar siempre en cuartos a lo largo, nunca entera ni en mitades'] },
+  { id: 'date',         emoji: '🌰', nameEs: 'Dátil',             nameEn: 'Date',          category: 'fruits',     fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: true,  laxative: true, flags: ['Sin hueso, en puré o bien picado'] },
+  { id: 'mushroom',     emoji: '🍄', nameEs: 'Champiñón',         nameEn: 'Mushroom',      category: 'vegetables', fromMonths: 10, status: 'available', isAllergen: false, chokingRisk: false, flags: ['Bien cocido y picado finamente'] },
+  { id: 'eggplant',     emoji: '🍆', nameEs: 'Berenjena',         nameEn: 'Eggplant',      category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
+  { id: 'chard',        emoji: '🥬', nameEs: 'Acelga',            nameEn: 'Swiss chard',   category: 'vegetables', fromMonths: 8,  status: 'available', isAllergen: false, chokingRisk: false },
+  { id: 'hummus',       emoji: '🧆', nameEs: 'Hummus',            nameEn: 'Hummus',        category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: false },
+  { id: 'whitefish',    emoji: '🐟', nameEs: 'Pescado blanco',    nameEn: 'White fish',    category: 'proteins',   fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Revisar bien que no tenga espinas'] },
+  { id: 'almondbutter', emoji: '🥜', nameEs: 'Mantequilla de almendra', nameEn: 'Almond butter', category: 'proteins', fromMonths: 6, status: 'available', isAllergen: true, chokingRisk: true, flags: ['Untar en capa muy fina; nunca dar en cucharadas o trozos espesos'] },
+
+  // ── DAIRY ─────────────────────────────────────────────────────────
+  { id: 'yogurt',       emoji: '🥣', nameEs: 'Yogur natural',      nameEn: 'Plain yogurt',    category: 'dairy',      fromMonths: 6,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Sin azúcar añadida'] },
+  { id: 'cheese',       emoji: '🧀', nameEs: 'Queso fresco',       nameEn: 'Fresh cheese',    category: 'dairy',      fromMonths: 8,  status: 'available', isAllergen: true,  chokingRisk: false, flags: ['Bajo en sodio, en trozos pequeños y blandos'] },
+  { id: 'milk',         emoji: '🥛', nameEs: 'Leche entera',       nameEn: 'Whole milk',      category: 'dairy',      fromMonths: 12, status: 'available', isAllergen: true,  chokingRisk: false, flags: ['No ofrecer como bebida principal antes de los 12 meses; usar en preparaciones'] },
+  { id: 'kefir',        emoji: '🥤', nameEs: 'Kéfir natural',      nameEn: 'Plain kefir',     category: 'dairy',      fromMonths: 9,  status: 'available', isAllergen: true,  chokingRisk: false },
 ];
 
 export const FOOD_CATEGORIES: { id: FoodCategory; labelEs: string; labelEn: string }[] = [
@@ -103,6 +118,7 @@ export const FOOD_CATEGORIES: { id: FoodCategory; labelEs: string; labelEn: stri
   { id: 'vegetables', labelEs: 'Verduras',              labelEn: 'Vegetables' },
   { id: 'proteins',   labelEs: 'Proteínas',             labelEn: 'Proteins' },
   { id: 'grains',     labelEs: 'Cereales y tubérculos', labelEn: 'Grains & starches' },
+  { id: 'dairy',      labelEs: 'Lácteos',               labelEn: 'Dairy' },
 ];
 
 export function getFoodsByCategory(category: FoodCategory): Food[] {
