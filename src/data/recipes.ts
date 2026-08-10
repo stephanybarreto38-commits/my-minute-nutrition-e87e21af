@@ -1686,6 +1686,24 @@ export const MEAL_TYPE_MAP: Record<string, MealType[]> = {
 
   'rice-lentils': ['lunch', 'dinner'],
 
+  'strawberry-oats': ['breakfast'],
+  'spinach-egg-scramble': ['breakfast'],
+  'celery-chicken-soup': ['lunch', 'dinner'],
+  'asparagus-blw': ['lunch', 'dinner'],
+  'bellpepper-chicken-fajita': ['lunch', 'dinner'],
+  'tomato-pasta-toddler': ['lunch', 'dinner'],
+  'artichoke-steamed': ['lunch', 'dinner'],
+  'nopal-egg': ['breakfast'],
+  'edamame-rice-bowl': ['lunch', 'dinner'],
+  'mackerel-rice': ['lunch', 'dinner'],
+  'lamb-stew': ['lunch', 'dinner'],
+  'pork-plantain': ['lunch', 'dinner'],
+  'taro-mash': ['lunch', 'dinner'],
+  'chickpea-veggie-fritters': ['lunch', 'snack'],
+  'arepa-beef-avocado': ['lunch', 'dinner'],
+  'salmon-quinoa-asparagus': ['lunch', 'dinner'],
+  'turkey-meatballs': ['lunch', 'dinner', 'snack'],
+  'fig-snack': ['snack'],
 };
 
 export function getRecipesByMealType(mealType: MealType): Recipe[] {
