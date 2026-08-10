@@ -82,6 +82,7 @@ function eligibleRecipes(cfg: WeekConfig): Recipe[] {
   const allergySet = new Set(cfg.allergies);
   return RECIPES.filter(r => {
     if (!r.methodBadges.includes(cfg.method)) return false;
+    if (r.minMonths != null && cfg.ageMonths < r.minMonths) return false;
     if (r.foodIds.some(id => allergySet.has(id))) return false;
     const sig = recipeSignal(r, cfg.ageMonths);
     return sig === 'ready' || sig === 'soon';
