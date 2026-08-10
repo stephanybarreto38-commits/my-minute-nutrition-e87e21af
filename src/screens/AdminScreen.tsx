@@ -16,9 +16,14 @@ interface ProfileRow {
 
 const ADMIN_EMAIL = 'stephanybarreto38@gmail.com';
 
+interface AllowedRow { id: string; email: string }
+
 export default function AdminScreen({ lang, onBack }: Props) {
   const isEs = lang === 'es';
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [allowed, setAllowed] = useState<AllowedRow[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteMsg, setInviteMsg] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -28,10 +33,37 @@ export default function AdminScreen({ lang, onBack }: Props) {
       .select('id, email, approved, created_at')
       .order('created_at', { ascending: false });
     if (!error && data) setProfiles(data as ProfileRow[]);
+    const { data: al } = await supabase
+      .from('allowed_emails')
+      .select('id, email')
+      .order('created_at', { ascending: false });
+    if (al) setAllowed(al as AllowedRow[]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const invite = async () => {
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    setInviteMsg('');
+    const { error } = await supabase.from('allowed_emails').insert({ email });
+    if (error && !error.message.includes('duplicate')) {
+      setInviteMsg(error.message);
+      return;
+    }
+    // Si ya se registró, aprobarlo de una vez
+    await supabase.from('profiles').update({ approved: true }).eq('email', email);
+    setInviteEmail('');
+    setInviteMsg(isEs ? '¡Acceso concedido!' : 'Access granted!');
+    await load();
+  };
+
+  const removeAllowed = async (id: string) => {
+    await supabase.from('allowed_emails').delete().eq('id', id);
+    await load();
+  };
+
 
   const setApproved = async (id: string, approved: boolean) => {
     await supabase.from('profiles').update({ approved }).eq('id', id);
