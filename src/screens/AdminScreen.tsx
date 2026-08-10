@@ -102,6 +102,47 @@ export default function AdminScreen({ lang, onBack }: Props) {
             <p className="text-xs text-gray-500">{isEs ? 'Aprobados' : 'Approved'}</p>
           </div>
         </div>
+        {/* DAR ACCESO A NUEVOS USUARIOS */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-4">
+          <h2 className="text-sm font-semibold text-gray-800 mb-1">
+            {isEs ? '➕ Dar acceso a un nuevo usuario' : '➕ Give access to a new user'}
+          </h2>
+          <p className="text-[11px] text-gray-500 mb-3">
+            {isEs
+              ? 'Escribe su correo. Si ya se registró, queda aprobado al instante; si aún no, entrará aprobado automáticamente al crear su cuenta.'
+              : 'Enter their email. If they already signed up they are approved instantly; otherwise they will be auto-approved when they register.'}
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              placeholder={isEs ? 'correo@ejemplo.com' : 'email@example.com'}
+              className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            />
+            <button
+              onClick={invite}
+              className="bg-green-600 text-white text-xs font-medium px-4 rounded-xl flex-shrink-0"
+            >
+              {isEs ? 'Dar acceso' : 'Give access'}
+            </button>
+          </div>
+          {inviteMsg && <p className="text-[11px] text-green-700 mt-2">{inviteMsg}</p>}
+
+          {allowed.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {allowed.map(a => (
+                <li key={a.id} className="flex items-center justify-between gap-2 text-[12px] text-gray-700 bg-gray-50 rounded-lg px-2.5 py-1.5">
+                  <span className="truncate">{a.email}</span>
+                  <button onClick={() => removeAllowed(a.id)} className="text-[11px] text-gray-400 flex-shrink-0">
+                    {isEs ? 'Quitar' : 'Remove'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
 
         {loading && (
           <p className="text-sm text-gray-500 text-center py-4">
