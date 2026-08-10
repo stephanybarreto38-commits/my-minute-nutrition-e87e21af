@@ -6,6 +6,7 @@ export interface Recipe {
   timeMin: number;
   method: 'steam' | 'boil' | 'raw' | 'bake' | 'saute';
   methodBadges: ('BLW' | 'BLISS' | 'Purés')[];
+  minMonths?: number;
   stepsEs: string[];
   stepsEn: string[];
   adultVersionEs: string;
