@@ -40,6 +40,11 @@ export default function RecipeSheet({ lang, recipe, onClose }: Props) {
                 {b}
               </span>
             ))}
+            {recipe.minMonths != null && recipe.minMonths >= 12 && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                {lang === 'es' ? '12-24 meses' : '12-24 months'}
+              </span>
+            )}
           </div>
           <p className="text-[12px] text-gray-500 leading-relaxed">{stepsText}</p>
 
