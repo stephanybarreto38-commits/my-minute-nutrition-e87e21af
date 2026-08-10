@@ -36,7 +36,7 @@ export default function HomeScreen({
 }: Props) {
   const tx = t[lang];
   const [expanded, setExpanded] = useState<Record<FoodCategory, boolean>>({
-    fruits: false, vegetables: false, proteins: false, grains: false,
+    fruits: false, vegetables: false, proteins: false, grains: false, dairy: false,
   });
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
@@ -68,6 +68,7 @@ export default function HomeScreen({
       vegetables: tx.category.vegetablesPlural,
       proteins: tx.category.proteinsPlural,
       grains: tx.category.grainsPlural,
+      dairy: lang === 'es' ? 'lácteos' : 'dairy',
     };
     return map[cat];
   };
