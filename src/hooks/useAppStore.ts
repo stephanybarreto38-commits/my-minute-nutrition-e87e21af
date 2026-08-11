@@ -436,6 +436,7 @@ export function useAppStore() {
     method: activeBaby.method,
     setLang,
     setMethod,
+    updateBaby,
     navigateTo,
     setAgeFilter,
     saveLog,
