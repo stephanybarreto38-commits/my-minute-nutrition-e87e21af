@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import type { FeedingMethod, BabyProfile } from '../hooks/useAppStore';
@@ -11,6 +12,7 @@ interface Props {
   foodLogs: Record<string, FoodLog>;
   totalFoods: number;
   onMethodChange: (m: FeedingMethod) => void;
+  onUpdateBaby?: (updates: { name?: string; birthDate?: string }) => void;
   isAdmin?: boolean;
   userEmail?: string | null;
   onOpenAdmin?: () => void;
@@ -21,15 +23,26 @@ interface Props {
 const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
 
 export default function ProfileScreen({
-  lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange,
+  lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange, onUpdateBaby,
   isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang,
 }: Props) {
   const tx = t[lang];
+  const isEs = lang === 'es';
+
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(baby.name ?? '');
+  const [birthDate, setBirthDate] = useState(baby.birthDate ?? '');
+
+  useEffect(() => {
+    setName(baby.name ?? '');
+    setBirthDate(baby.birthDate ?? '');
+  }, [baby.name, baby.birthDate]);
 
   const triedCount = Object.values(foodLogs).filter(l => l.tried).length;
   const recipesCount = 3;
   const reactionCount = Object.values(foodLogs).filter(l => l.reaction === 'reaction').length;
   const progress = Math.round((triedCount / totalFoods) * 100);
+
 
   const birthFormatted = baby.birthDate
     ? new Date(baby.birthDate).toLocaleDateString(lang === 'es' ? 'es-CO' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })
