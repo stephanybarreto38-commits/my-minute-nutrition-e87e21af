@@ -9,6 +9,8 @@ import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
 import RecipeSheet from '../components/RecipeSheet';
+import PlateCheckSheet from '../components/PlateCheckSheet';
+
 
 
 
@@ -24,6 +26,7 @@ interface Props {
   onNavigate: (screen: Screen) => void;
   onMethodOpen: () => void;
   onToggleLang: () => void;
+  onMarkTried: (foodId: string) => void;
 }
 
 const PREVIEW_COUNT = 3;
@@ -32,7 +35,7 @@ const SUGGESTED_FOOD = FOODS.find(f => f.id === SUGGESTED_FOOD_ID)!;
 
 export default function HomeScreen({
   lang, method, babyName, babyMonths, babyWeek,
-  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen, onToggleLang,
+  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen, onToggleLang, onMarkTried,
 }: Props) {
   const tx = t[lang];
   const [expanded, setExpanded] = useState<Record<FoodCategory, boolean>>({
@@ -40,6 +43,7 @@ export default function HomeScreen({
   });
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
+  const [plateCheckOpen, setPlateCheckOpen] = useState(false);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
