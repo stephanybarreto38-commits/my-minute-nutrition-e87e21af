@@ -424,9 +424,12 @@ export function useAppStore() {
 
   const getBabyAgeMonths = () => {
     if (!activeBaby.birthDate) return 0;
-    const birth = new Date(activeBaby.birthDate);
+    const [y, m, d] = activeBaby.birthDate.split('-').map(Number);
+    if (!y || !m || !d) return 0;
     const now = new Date();
-    return (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
+    let months = (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m);
+    if (now.getDate() < d) months -= 1;
+    return Math.max(0, months);
   };
 
   return {
