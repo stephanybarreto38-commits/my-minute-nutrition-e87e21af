@@ -5,6 +5,21 @@ const APPROVED_EVENTS = new Set([
   "PURCHASE_APPROVED",
 ]);
 
+const REVOKED_EVENTS = new Set([
+  "PURCHASE_CANCELED",
+  "PURCHASE_CANCELLED",
+  "PURCHASE_REFUNDED",
+  "PURCHASE_CHARGEBACK",
+  "PURCHASE_EXPIRED",
+  "PURCHASE_PROTEST",
+  "PURCHASE_DELAYED",
+  "SUBSCRIPTION_CANCELLATION",
+  "CANCELED",
+  "CANCELLED",
+  "REFUNDED",
+  "CHARGEBACK",
+]);
+
 function extractHottok(request: Request, payload: Record<string, unknown>): string | null {
   const header =
     request.headers.get("x-hotmart-hottok") ??
