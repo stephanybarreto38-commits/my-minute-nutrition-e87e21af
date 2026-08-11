@@ -67,7 +67,69 @@ export default function ProfileScreen({
         <p className="text-sm text-gray-500 mt-0.5">
           {babyMonths} {lang === 'es' ? 'meses' : 'months'} {birthFormatted && `· ${tx.profile.bornLabel(birthFormatted)}`}
         </p>
+        {onUpdateBaby && !editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="mt-3 px-4 py-1.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200"
+          >
+            ✏️ {isEs ? 'Editar datos del bebé' : 'Edit baby details'}
+          </button>
+        )}
       </div>
+
+      {onUpdateBaby && editing && (
+        <div className="mx-4 mb-4 rounded-xl border border-green-200 bg-green-50/50 p-4 space-y-3">
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">
+              {isEs ? 'Nombre del bebé' : "Baby's name"}
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-green-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">
+              {isEs ? 'Fecha de nacimiento' : 'Date of birth'}
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setBirthDate(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-green-400"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">
+              {isEs
+                ? 'La edad en meses se recalcula automáticamente con esta fecha.'
+                : 'Age in months is recalculated automatically from this date.'}
+            </p>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => { setName(baby.name ?? ''); setBirthDate(baby.birthDate ?? ''); setEditing(false); }}
+              className="flex-1 py-2.5 rounded-xl text-sm text-gray-600 bg-white border border-gray-200"
+            >
+              {isEs ? 'Cancelar' : 'Cancel'}
+            </button>
+            <button
+              disabled={!name.trim() || !birthDate}
+              onClick={() => {
+                onUpdateBaby({ name: name.trim(), birthDate });
+                setEditing(false);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium ${
+                name.trim() && birthDate ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              {isEs ? 'Guardar' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
 
       <div className="mx-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div className="grid grid-cols-2 gap-3 text-center">
