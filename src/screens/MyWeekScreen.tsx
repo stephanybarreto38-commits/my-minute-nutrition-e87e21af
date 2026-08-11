@@ -184,6 +184,11 @@ export default function MyWeekScreen({
 
   const [method, setMethod] = useState<FeedingMethod>(currentMethod);
   const [ageMonths, setAgeMonths] = useState<number>(Math.max(6, babyMonths || 6));
+
+  // Si se corrige la fecha de nacimiento, refrescar la edad usada en el plan
+  useEffect(() => {
+    setAgeMonths(Math.max(6, babyMonths || 6));
+  }, [babyMonths]);
   const [meals, setMeals] = useState<MealSlot[]>(['breakfast', 'lunch', 'snack', 'dinner']);
   const [allergies, setAllergies] = useState<Set<string>>(new Set());
 
