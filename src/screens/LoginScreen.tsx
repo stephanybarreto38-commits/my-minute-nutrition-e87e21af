@@ -10,6 +10,8 @@ interface Props {
 
 type Mode = 'login' | 'register';
 
+const PURCHASE_URL = 'https://pay.hotmart.com/E106617642L';
+
 const ensureAccessRequest = async (userId: string, userEmail: string) => {
   const normalizedEmail = userEmail.trim().toLowerCase();
   await supabase.from('profiles').upsert(
