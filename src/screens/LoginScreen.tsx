@@ -79,19 +79,37 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-          <div className="text-5xl mb-3">⏳</div>
-          <h2 className="text-lg font-bold text-gray-900">{isEs ? 'Solicitud enviada' : 'Request sent'}</h2>
+          <div className="text-5xl mb-3">🔒</div>
+          <h2 className="text-lg font-bold text-gray-900">
+            {isEs ? 'Este correo aún no tiene acceso' : 'This email has no access yet'}
+          </h2>
           <p className="text-sm text-gray-600 mt-2 leading-snug">
-            {isEs ? 'Tu cuenta está pendiente de aprobación.' : 'Your account is pending approval.'}
+            {isEs
+              ? 'No encontramos una compra activa con este correo. Compra Little Meal y tu acceso se activa automáticamente con el mismo correo.'
+              : 'We could not find an active purchase for this email. Buy Little Meal and your access is activated automatically with the same email.'}
           </p>
           <p className="text-xs text-gray-400 mt-3">{email}</p>
-          <button onClick={() => { setPending(false); setMode('login'); }} className="mt-6 text-sm text-green-600 font-medium">
+          <a
+            href={PURCHASE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 block w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+          >
+            {isEs ? 'Comprar acceso' : 'Get access'}
+          </a>
+          <p className="text-[11px] text-gray-400 mt-3 leading-snug">
+            {isEs
+              ? 'Si ya compraste, usa el mismo correo de la compra o espera unos minutos y vuelve a intentar.'
+              : 'If you already purchased, use the same email from your purchase or wait a few minutes and try again.'}
+          </p>
+          <button onClick={() => { setPending(false); setMode('login'); }} className="mt-5 text-sm text-green-600 font-medium">
             {isEs ? '← Volver al inicio' : '← Back to sign in'}
           </button>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col items-center px-6 py-8">
