@@ -140,6 +140,8 @@ export default function App() {
               onNavigate={store.navigateTo}
               onMethodOpen={() => setMethodSheetOpen(true)}
               onToggleLang={handleLangToggle}
+              onMarkTried={(foodId) => store.quickLog(foodId, 'normal')}
+
             />
           )}
           {store.screen === 'food-detail' && selectedFood && (

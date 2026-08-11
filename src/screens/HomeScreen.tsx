@@ -9,6 +9,8 @@ import FoodCard from '../components/FoodCard';
 import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
 import RecipeSheet from '../components/RecipeSheet';
+import PlateCheckSheet from '../components/PlateCheckSheet';
+
 
 
 
@@ -24,6 +26,7 @@ interface Props {
   onNavigate: (screen: Screen) => void;
   onMethodOpen: () => void;
   onToggleLang: () => void;
+  onMarkTried: (foodId: string) => void;
 }
 
 const PREVIEW_COUNT = 3;
@@ -32,7 +35,7 @@ const SUGGESTED_FOOD = FOODS.find(f => f.id === SUGGESTED_FOOD_ID)!;
 
 export default function HomeScreen({
   lang, method, babyName, babyMonths, babyWeek,
-  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen, onToggleLang,
+  foodLogs, triedFoodIds, onFoodClick, onNavigate, onMethodOpen, onToggleLang, onMarkTried,
 }: Props) {
   const tx = t[lang];
   const [expanded, setExpanded] = useState<Record<FoodCategory, boolean>>({
@@ -40,6 +43,7 @@ export default function HomeScreen({
   });
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
+  const [plateCheckOpen, setPlateCheckOpen] = useState(false);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
@@ -166,7 +170,7 @@ export default function HomeScreen({
       </div>
 
       {/* COOK CTA */}
-      <div className="px-4 mt-2.5">
+      <div className="px-4 mt-2.5 space-y-2">
         <button onClick={() => onNavigate('fridge')} className="w-full flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
           <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">🧑‍🍳</div>
           <div className="flex-1 text-left min-w-0">
@@ -177,7 +181,31 @@ export default function HomeScreen({
             <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
         </button>
+
+        <button onClick={() => setPlateCheckOpen(true)} className="w-full flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+          <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">📸</div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-[13px] font-medium text-gray-900">{lang === 'es' ? 'Revisar cortes' : 'Check the cuts'}</p>
+            <p className="text-[11px] text-gray-500 truncate">
+              {lang === 'es' ? '¿Los trozos son seguros para comer?' : 'Are the pieces safe to eat?'}
+            </p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 text-gray-400">
+            <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
+
+      {plateCheckOpen && (
+        <PlateCheckSheet
+          lang={lang}
+          ageMonths={babyMonths}
+          triedFoodIds={triedFoodIds}
+          onMarkTried={onMarkTried}
+          onClose={() => setPlateCheckOpen(false)}
+        />
+      )}
+
 
       {/* LEGEND */}
       <div className="flex gap-x-3 gap-y-1.5 flex-wrap px-4 py-2">
