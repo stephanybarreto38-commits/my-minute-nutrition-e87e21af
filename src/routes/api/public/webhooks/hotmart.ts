@@ -70,7 +70,39 @@ export const Route = createFileRoute("/api/public/webhooks/hotmart")({
 
         console.log(`[hotmart] event=${event} email=${email ?? "n/a"}`);
 
-        if (!APPROVED_EVENTS.has(event.toUpperCase())) {
+        const upperEvent = event.toUpperCase();
+
+        if (REVOKED_EVENTS.has(upperEvent)) {
+          if (!email) {
+            console.warn("[hotmart] revocation without buyer email");
+            return Response.json({ ok: true, skipped: "missing_email" });
+          }
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          const { error: removeError } = await supabaseAdmin
+            .from("allowed_emails")
+            .delete()
+            .eq("email", email);
+          if (removeError) {
+            console.error(`[hotmart] failed to remove allowlist ${email}: ${removeError.message}`);
+            return new Response("Error", { status: 500 });
+          }
+
+          const { error: revokeError } = await supabaseAdmin
+            .from("profiles")
+            .update({ approved: false })
+            .eq("email", email);
+          if (revokeError) {
+            console.error(`[hotmart] failed to revoke ${email}: ${revokeError.message}`);
+            return new Response("Error", { status: 500 });
+          }
+
+          console.log(`[hotmart] access revoked: ${email}`);
+          return Response.json({ ok: true, action: "revoked" });
+        }
+
+        if (!APPROVED_EVENTS.has(upperEvent)) {
           return Response.json({ ok: true, ignored: event });
         }
 
