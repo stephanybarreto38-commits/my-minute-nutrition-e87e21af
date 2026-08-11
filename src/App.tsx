@@ -207,6 +207,7 @@ export default function App() {
               foodLogs={store.foodLogs}
               totalFoods={120}
               onMethodChange={store.setMethod}
+              onUpdateBaby={store.updateBaby}
               isAdmin={store.isAdmin}
               userEmail={store.userEmail}
               onOpenAdmin={() => store.navigateTo('admin')}
