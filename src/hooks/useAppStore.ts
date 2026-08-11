@@ -207,7 +207,7 @@ export function useAppStore() {
       };
     });
     if (!babyId) return;
-    const payload: Record<string, string> = {};
+    const payload: { name?: string; birth_date?: string } = {};
     if (updates.name !== undefined) payload.name = updates.name;
     if (updates.birthDate !== undefined) payload.birth_date = updates.birthDate;
     if (Object.keys(payload).length) {
