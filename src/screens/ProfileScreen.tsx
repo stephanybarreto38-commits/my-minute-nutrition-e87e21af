@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import type { FeedingMethod, BabyProfile } from '../hooks/useAppStore';
@@ -11,6 +12,7 @@ interface Props {
   foodLogs: Record<string, FoodLog>;
   totalFoods: number;
   onMethodChange: (m: FeedingMethod) => void;
+  onUpdateBaby?: (updates: { name?: string; birthDate?: string }) => void;
   isAdmin?: boolean;
   userEmail?: string | null;
   onOpenAdmin?: () => void;
@@ -21,15 +23,26 @@ interface Props {
 const METHODS: FeedingMethod[] = ['BLW', 'BLISS', 'Purés'];
 
 export default function ProfileScreen({
-  lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange,
+  lang, baby, babyMonths, method, foodLogs, totalFoods, onMethodChange, onUpdateBaby,
   isAdmin, userEmail, onOpenAdmin, onLogout, onToggleLang,
 }: Props) {
   const tx = t[lang];
+  const isEs = lang === 'es';
+
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(baby.name ?? '');
+  const [birthDate, setBirthDate] = useState(baby.birthDate ?? '');
+
+  useEffect(() => {
+    setName(baby.name ?? '');
+    setBirthDate(baby.birthDate ?? '');
+  }, [baby.name, baby.birthDate]);
 
   const triedCount = Object.values(foodLogs).filter(l => l.tried).length;
   const recipesCount = 3;
   const reactionCount = Object.values(foodLogs).filter(l => l.reaction === 'reaction').length;
   const progress = Math.round((triedCount / totalFoods) * 100);
+
 
   const birthFormatted = baby.birthDate
     ? new Date(baby.birthDate).toLocaleDateString(lang === 'es' ? 'es-CO' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -54,7 +67,69 @@ export default function ProfileScreen({
         <p className="text-sm text-gray-500 mt-0.5">
           {babyMonths} {lang === 'es' ? 'meses' : 'months'} {birthFormatted && `· ${tx.profile.bornLabel(birthFormatted)}`}
         </p>
+        {onUpdateBaby && !editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="mt-3 px-4 py-1.5 rounded-full text-xs font-medium bg-green-50 text-green-800 border border-green-200"
+          >
+            ✏️ {isEs ? 'Editar datos del bebé' : 'Edit baby details'}
+          </button>
+        )}
       </div>
+
+      {onUpdateBaby && editing && (
+        <div className="mx-4 mb-4 rounded-xl border border-green-200 bg-green-50/50 p-4 space-y-3">
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">
+              {isEs ? 'Nombre del bebé' : "Baby's name"}
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-green-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">
+              {isEs ? 'Fecha de nacimiento' : 'Date of birth'}
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setBirthDate(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-green-400"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">
+              {isEs
+                ? 'La edad en meses se recalcula automáticamente con esta fecha.'
+                : 'Age in months is recalculated automatically from this date.'}
+            </p>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => { setName(baby.name ?? ''); setBirthDate(baby.birthDate ?? ''); setEditing(false); }}
+              className="flex-1 py-2.5 rounded-xl text-sm text-gray-600 bg-white border border-gray-200"
+            >
+              {isEs ? 'Cancelar' : 'Cancel'}
+            </button>
+            <button
+              disabled={!name.trim() || !birthDate}
+              onClick={() => {
+                onUpdateBaby({ name: name.trim(), birthDate });
+                setEditing(false);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium ${
+                name.trim() && birthDate ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              {isEs ? 'Guardar' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
 
       <div className="mx-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div className="grid grid-cols-2 gap-3 text-center">

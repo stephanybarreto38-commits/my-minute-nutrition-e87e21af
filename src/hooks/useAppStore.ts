@@ -192,6 +192,29 @@ export function useAppStore() {
     });
   }, []);
 
+  const updateBaby = useCallback(async (updates: { name?: string; birthDate?: string }) => {
+    let babyId: string | null = null;
+    setState(s => {
+      babyId = s.activeBabyId;
+      if (!babyId) return s;
+      return {
+        ...s,
+        babies: s.babies.map(b => b.id === babyId ? {
+          ...b,
+          name: updates.name ?? b.name,
+          birthDate: updates.birthDate ?? b.birthDate,
+        } : b),
+      };
+    });
+    if (!babyId) return;
+    const payload: { name?: string; birth_date?: string } = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.birthDate !== undefined) payload.birth_date = updates.birthDate;
+    if (Object.keys(payload).length) {
+      await supabase.from('baby_profiles').update(payload).eq('id', babyId);
+    }
+  }, []);
+
   const navigateTo = useCallback((screen: Screen, foodId?: string) => {
     setState(s => ({ ...s, screen, selectedFoodId: foodId ?? s.selectedFoodId }));
   }, []);
@@ -413,6 +436,7 @@ export function useAppStore() {
     method: activeBaby.method,
     setLang,
     setMethod,
+    updateBaby,
     navigateTo,
     setAgeFilter,
     saveLog,
