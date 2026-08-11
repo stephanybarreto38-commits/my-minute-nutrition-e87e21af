@@ -178,6 +178,12 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
           className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
           {loading ? (isEs ? 'Cargando...' : 'Loading...') : mode === 'login' ? (isEs ? 'Ingresar' : 'Sign in') : (isEs ? 'Crear cuenta' : 'Create account')}
         </button>
+        <p className="text-center text-xs text-gray-500 pt-1">
+          {isEs ? '¿Aún no tienes acceso? ' : "Don't have access yet? "}
+          <a href={PURCHASE_URL} target="_blank" rel="noopener noreferrer" className="text-green-600 font-semibold underline">
+            {isEs ? 'Comprar Little Meal' : 'Buy Little Meal'}
+          </a>
+        </p>
       </div>
     </div>
   );
