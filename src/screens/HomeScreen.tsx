@@ -45,6 +45,15 @@ export default function HomeScreen({
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
   const [plateCheckOpen, setPlateCheckOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    setIsStandalone(!!standalone);
+  }, []);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
