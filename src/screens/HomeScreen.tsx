@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
@@ -10,6 +10,7 @@ import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
 import RecipeSheet from '../components/RecipeSheet';
 import PlateCheckSheet from '../components/PlateCheckSheet';
+import InstallAppSheet from '../components/InstallAppSheet';
 
 
 
