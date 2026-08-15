@@ -89,12 +89,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Complementary food" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/83c7f82d-b4e3-4fee-b8a9-6a45a3a7cfea/id-preview-4f1eb7f0--f522c546-383f-4988-9b92-65f60f550dc2.lovable.app-1782523152795.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/83c7f82d-b4e3-4fee-b8a9-6a45a3a7cfea/id-preview-4f1eb7f0--f522c546-383f-4988-9b92-65f60f550dc2.lovable.app-1782523152795.png" },
+      { name: "theme-color", content: "#059669" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Little Meal" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       {
         rel: "preconnect",
         href: "https://fonts.googleapis.com",
@@ -132,6 +140,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      (window as unknown as { deferredInstallPrompt?: Event }).deferredInstallPrompt = e;
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

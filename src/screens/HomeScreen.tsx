@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Lang } from '../data/translations';
 import { t } from '../data/translations';
 import { FOODS, FOOD_CATEGORIES, getFoodsByCategory } from '../data/foods';
@@ -10,6 +10,7 @@ import WeeklyTip from '../components/WeeklyTip';
 import MealTypeNav from '../components/MealTypeNav';
 import RecipeSheet from '../components/RecipeSheet';
 import PlateCheckSheet from '../components/PlateCheckSheet';
+import InstallAppSheet from '../components/InstallAppSheet';
 
 
 
@@ -44,6 +45,15 @@ export default function HomeScreen({
   const [activeMeal, setActiveMeal] = useState<MealType>('breakfast');
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
   const [plateCheckOpen, setPlateCheckOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    setIsStandalone(!!standalone);
+  }, []);
 
   const totalFoods = FOODS.length;
   const progress = Math.round((triedFoodIds.length / totalFoods) * 100);
@@ -194,7 +204,26 @@ export default function HomeScreen({
             <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
         </button>
+
+        {!isStandalone && (
+          <button onClick={() => setInstallOpen(true)} className="w-full flex items-center gap-2.5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-xl flex-shrink-0">📲</div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-[13px] font-medium text-emerald-900">
+                {lang === 'es' ? 'Instalar la app en tu teléfono' : 'Install the app on your phone'}
+              </p>
+              <p className="text-[11px] text-emerald-700 truncate">
+                {lang === 'es' ? 'iPhone y Android · en 3 pasos' : 'iPhone and Android · in 3 steps'}
+              </p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 text-emerald-500">
+              <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
       </div>
+
+      {installOpen && <InstallAppSheet lang={lang} onClose={() => setInstallOpen(false)} />}
 
       {plateCheckOpen && (
         <PlateCheckSheet
