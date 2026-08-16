@@ -32,8 +32,8 @@ export default function App() {
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8 relative">
-      <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
+    <div className="h-[100dvh] md:min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8 relative">
+      <div className="w-full h-full md:w-auto md:max-w-5xl md:max-h-[820px] md:min-h-[700px] md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 overflow-hidden flex flex-col md:flex-row">
 
         {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
         <aside
@@ -112,109 +112,111 @@ export default function App() {
         </aside>
 
         {/* ── MAIN CONTENT ──────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col h-[100dvh] md:h-[820px] overflow-hidden bg-white">
-          {store.screen === 'login' && (
-            <LoginScreen
-              lang={store.lang}
-              onToggleLang={handleLangToggle}
-              onLogin={store.loginUser}
-            />
-          )}
-          {store.screen === 'onboarding' && (
-            <OnboardingScreen
-              lang={store.lang}
-              onToggleLang={handleLangToggle}
-              onComplete={store.completeOnboarding}
-            />
-          )}
-          {store.screen === 'home' && (
-            <HomeScreen
-              lang={store.lang}
-              method={store.method}
-              babyName={store.baby.name}
-              babyMonths={babyMonths}
-              babyWeek={babyWeek}
-              foodLogs={store.foodLogs}
-              triedFoodIds={store.triedFoodIds}
-              onFoodClick={handleFoodClick}
-              onNavigate={store.navigateTo}
-              onMethodOpen={() => setMethodSheetOpen(true)}
-              onToggleLang={handleLangToggle}
-              onMarkTried={(foodId) => store.quickLog(foodId, 'normal')}
+        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {store.screen === 'login' && (
+              <LoginScreen
+                lang={store.lang}
+                onToggleLang={handleLangToggle}
+                onLogin={store.loginUser}
+              />
+            )}
+            {store.screen === 'onboarding' && (
+              <OnboardingScreen
+                lang={store.lang}
+                onToggleLang={handleLangToggle}
+                onComplete={store.completeOnboarding}
+              />
+            )}
+            {store.screen === 'home' && (
+              <HomeScreen
+                lang={store.lang}
+                method={store.method}
+                babyName={store.baby.name}
+                babyMonths={babyMonths}
+                babyWeek={babyWeek}
+                foodLogs={store.foodLogs}
+                triedFoodIds={store.triedFoodIds}
+                onFoodClick={handleFoodClick}
+                onNavigate={store.navigateTo}
+                onMethodOpen={() => setMethodSheetOpen(true)}
+                onToggleLang={handleLangToggle}
+                onMarkTried={(foodId) => store.quickLog(foodId, 'normal')}
 
-            />
-          )}
-          {store.screen === 'food-detail' && selectedFood && (
-            <FoodDetailScreen
-              lang={store.lang}
-              food={selectedFood}
-              log={store.foodLogs[selectedFood.id]}
-              method={store.method}
-              onBack={() => store.navigateTo('home')}
-              onSaveLog={store.saveLog}
-              onAddToShopping={store.addToShoppingList}
-            />
-          )}
-          {store.screen === 'shopping' && (
-            <ShoppingScreen
-              lang={store.lang}
-              items={store.shoppingList}
-              onToggle={store.toggleShoppingItem}
-              onClear={store.clearCheckedItems}
-            />
-          )}
-          {store.screen === 'fridge' && (
-            <FridgeScreen
-              lang={store.lang}
-              babyName={store.baby.name}
-              triedFoodIds={store.triedFoodIds}
-              onBack={() => store.navigateTo('home')}
-              onFoodClick={(id) => store.navigateTo('food-detail', id)}
-            />
-          )}
-          {store.screen === 'world-recipes' && (
-            <WorldRecipesScreen
-              lang={store.lang}
-              babyMonths={babyMonths}
-            />
-          )}
-          {store.screen === 'my-week' && (
-            <MyWeekScreen
-              lang={store.lang}
-              currentMethod={store.method}
-              babyMonths={babyMonths}
-              savedPlan={store.weekPlanBlob}
-              onSavePlan={store.saveWeekPlan}
-              pantry={store.pantry}
-              onTogglePantry={store.togglePantry}
-              onMethodChange={store.setMethod}
-              onAddToShopping={store.addWeekToShoppingList}
-              onGoToShopping={() => store.navigateTo('shopping')}
-            />
-          )}
-          {store.screen === 'admin' && store.isAdmin && (
-            <AdminScreen
-              lang={store.lang}
-              onBack={() => store.navigateTo('home')}
-            />
-          )}
-          {store.screen === 'profile' && (
-            <ProfileScreen
-              lang={store.lang}
-              baby={store.baby}
-              babyMonths={babyMonths}
-              method={store.method}
-              foodLogs={store.foodLogs}
-              totalFoods={120}
-              onMethodChange={store.setMethod}
-              onUpdateBaby={store.updateBaby}
-              isAdmin={store.isAdmin}
-              userEmail={store.userEmail}
-              onOpenAdmin={() => store.navigateTo('admin')}
-              onLogout={store.logoutUser}
-              onToggleLang={handleLangToggle}
-            />
-          )}
+              />
+            )}
+            {store.screen === 'food-detail' && selectedFood && (
+              <FoodDetailScreen
+                lang={store.lang}
+                food={selectedFood}
+                log={store.foodLogs[selectedFood.id]}
+                method={store.method}
+                onBack={() => store.navigateTo('home')}
+                onSaveLog={store.saveLog}
+                onAddToShopping={store.addToShoppingList}
+              />
+            )}
+            {store.screen === 'shopping' && (
+              <ShoppingScreen
+                lang={store.lang}
+                items={store.shoppingList}
+                onToggle={store.toggleShoppingItem}
+                onClear={store.clearCheckedItems}
+              />
+            )}
+            {store.screen === 'fridge' && (
+              <FridgeScreen
+                lang={store.lang}
+                babyName={store.baby.name}
+                triedFoodIds={store.triedFoodIds}
+                onBack={() => store.navigateTo('home')}
+                onFoodClick={(id) => store.navigateTo('food-detail', id)}
+              />
+            )}
+            {store.screen === 'world-recipes' && (
+              <WorldRecipesScreen
+                lang={store.lang}
+                babyMonths={babyMonths}
+              />
+            )}
+            {store.screen === 'my-week' && (
+              <MyWeekScreen
+                lang={store.lang}
+                currentMethod={store.method}
+                babyMonths={babyMonths}
+                savedPlan={store.weekPlanBlob}
+                onSavePlan={store.saveWeekPlan}
+                pantry={store.pantry}
+                onTogglePantry={store.togglePantry}
+                onMethodChange={store.setMethod}
+                onAddToShopping={store.addWeekToShoppingList}
+                onGoToShopping={() => store.navigateTo('shopping')}
+              />
+            )}
+            {store.screen === 'admin' && store.isAdmin && (
+              <AdminScreen
+                lang={store.lang}
+                onBack={() => store.navigateTo('home')}
+              />
+            )}
+            {store.screen === 'profile' && (
+              <ProfileScreen
+                lang={store.lang}
+                baby={store.baby}
+                babyMonths={babyMonths}
+                method={store.method}
+                foodLogs={store.foodLogs}
+                totalFoods={120}
+                onMethodChange={store.setMethod}
+                onUpdateBaby={store.updateBaby}
+                isAdmin={store.isAdmin}
+                userEmail={store.userEmail}
+                onOpenAdmin={() => store.navigateTo('admin')}
+                onLogout={store.logoutUser}
+                onToggleLang={handleLangToggle}
+              />
+            )}
+          </div>
           {store.screen !== 'food-detail' && store.screen !== 'fridge' && store.screen !== 'login' && store.screen !== 'onboarding' && (
             <div className="md:hidden">
               <BottomNav

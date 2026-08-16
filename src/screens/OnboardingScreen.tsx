@@ -57,7 +57,7 @@ export default function OnboardingScreen({ lang, onToggleLang, onComplete }: Pro
     (step === 3 && method !== null);
 
   return (
-    <div className="flex flex-col flex-1 bg-white overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 bg-white overflow-hidden">
       {/* Lang toggle */}
       <div className="flex justify-end px-4 pt-4">
         <button
@@ -81,7 +81,7 @@ export default function OnboardingScreen({ lang, onToggleLang, onComplete }: Pro
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col px-6 overflow-y-auto">
+      <div className="flex-1 min-h-0 flex flex-col px-6 overflow-y-auto">
 
         {/* STEP 1 — Baby name */}
         {step === 1 && (

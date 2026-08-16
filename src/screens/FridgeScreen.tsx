@@ -30,7 +30,7 @@ export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onF
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <button onClick={onBack} className="text-green-700">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -40,7 +40,7 @@ export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onF
         <h2 className="text-base font-medium text-gray-900">{tx.fridge.title}</h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="mx-4 mt-3 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 text-xs text-blue-800">
           {tx.fridge.info(babyName)}
         </div>
