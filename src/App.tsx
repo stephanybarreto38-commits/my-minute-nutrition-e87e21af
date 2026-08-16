@@ -26,9 +26,19 @@ export default function App() {
   const handleFoodClick = (foodId: string) => setQuickModalFoodId(foodId);
 
   const babyMonths = store.getBabyAgeMonths();
-  const babyWeek = store.baby.birthDate
-    ? Math.max(0, Math.floor((Date.now() - new Date(store.baby.birthDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
-    : 0;
+  // Semana dentro del mes actual de vida (1–5), no semanas totales desde el nacimiento
+  const babyWeek = (() => {
+    const [y, m, d] = (store.baby.birthDate || '').split('-').map(Number);
+    if (!y || !m || !d) return 0;
+    const now = new Date();
+    // fecha del último "cumple-mes"
+    const anniv = new Date(now.getFullYear(), now.getMonth(), d);
+    if (anniv > now) anniv.setMonth(anniv.getMonth() - 1);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.max(0, Math.round((startOfToday.getTime() - anniv.getTime()) / 86400000));
+    return Math.min(5, Math.floor(days / 7) + 1);
+  })();
+
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
 
   return (
