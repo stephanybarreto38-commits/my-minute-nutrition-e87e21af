@@ -37,9 +37,10 @@ export default function MealTypeNav({ lang, activeMeal, onChange }: Props) {
           >
 
             <span className="text-xl leading-none">{icon}</span>
-            <span className={`text-[11px] ${isActive ? 'font-medium text-green-900' : 'text-gray-500'}`}>
+            <span className={`text-[11px] leading-tight text-center truncate w-full ${isActive ? 'font-medium text-green-900' : 'text-gray-500'}`}>
               {tx.home.mealNav[id]}
             </span>
+
           </button>
         );
       })}
