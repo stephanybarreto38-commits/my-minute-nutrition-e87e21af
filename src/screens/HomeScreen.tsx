@@ -88,7 +88,7 @@ export default function HomeScreen({
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
       {/* TOP BAR */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg flex-shrink-0">🐣</div>
