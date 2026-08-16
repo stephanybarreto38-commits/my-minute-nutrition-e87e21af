@@ -32,8 +32,8 @@ export default function App() {
   const selectedFood = store.selectedFoodId ? getFoodById(store.selectedFoodId) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8 relative">
-      <div className="w-full md:max-w-5xl md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 md:overflow-hidden flex flex-col md:flex-row md:min-h-[700px] md:max-h-[820px]">
+    <div className="h-[100dvh] md:min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-0 md:p-8 relative">
+      <div className="w-full h-full md:w-auto md:max-w-5xl md:max-h-[820px] md:min-h-[700px] md:bg-white md:rounded-3xl md:shadow-xl md:border md:border-gray-100 overflow-hidden flex flex-col md:flex-row">
 
         {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
         <aside
