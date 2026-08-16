@@ -94,7 +94,7 @@ export default function HomeScreen({
         <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg flex-shrink-0">🐣</div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">{tx.home.greeting(babyName)}</p>
-          <p className="text-xs text-gray-500">{tx.home.ageLabel(babyMonths, babyWeek)}</p>
+          <p className="text-xs text-gray-500">{tx.home.ageLabel(babyMonths)}</p>
         </div>
         <button onClick={onToggleLang} className="flex bg-gray-100 rounded-full border border-gray-200 overflow-hidden text-xs">
           <span className={`px-2.5 py-1 ${lang === 'es' ? 'bg-green-600 text-white rounded-full' : 'text-gray-500'}`}>ES</span>

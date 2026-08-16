@@ -12,7 +12,7 @@ export const t = {
     },
     home: {
       greeting: (name: string) => `Hola, ${name}`,
-      ageLabel: (months: number, weeks: number) => `${months} meses · Semana ${weeks}`,
+      ageLabel: (months: number) => `${months} meses`,
       progressLabel: 'Alimentos probados',
       cookCta: '¿Qué cocino hoy?',
       cookCtaSub: (name: string) => `Recetas con alimentos que ${name} ya probó`,
@@ -164,7 +164,7 @@ export const t = {
     },
     home: {
       greeting: (name: string) => `Hi, ${name}`,
-      ageLabel: (months: number, weeks: number) => `${months} months · Week ${weeks}`,
+      ageLabel: (months: number) => `${months} months`,
       progressLabel: 'Foods tried',
       cookCta: 'What should I cook today?',
       cookCtaSub: (name: string) => `Recipes using foods ${name} already tried`,
