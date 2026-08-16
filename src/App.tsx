@@ -112,7 +112,7 @@ export default function App() {
         </aside>
 
         {/* ── MAIN CONTENT ──────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col h-[100dvh] md:h-[820px] overflow-hidden bg-white">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white">
           <div className="flex-1 min-h-0 overflow-hidden">
             {store.screen === 'login' && (
               <LoginScreen
