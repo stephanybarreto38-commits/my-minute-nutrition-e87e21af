@@ -56,7 +56,7 @@ export default function ProfileScreen({
   ];
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
       <div className="px-4 py-3 border-b border-gray-100">
         <h2 className="text-base font-medium text-gray-900">{tx.profile.title(baby.name || (lang === 'es' ? 'bebé' : 'baby'))}</h2>
       </div>

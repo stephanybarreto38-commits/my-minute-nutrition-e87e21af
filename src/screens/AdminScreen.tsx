@@ -80,7 +80,7 @@ export default function AdminScreen({ lang, onBack }: Props) {
     });
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
       <div className="bg-white border-b border-gray-100 px-5 py-4">
         <button onClick={onBack} className="text-xs text-gray-500 mb-3 flex items-center gap-1">
           ← {isEs ? 'Volver' : 'Back'}

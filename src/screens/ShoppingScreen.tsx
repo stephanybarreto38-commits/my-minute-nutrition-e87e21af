@@ -74,7 +74,7 @@ export default function ShoppingScreen({ lang, items, onToggle, onClear }: Props
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto">
         {items.length === 0 ? (
           <p className="text-center text-sm text-gray-400 py-12">{tx.shopping.empty}</p>
         ) : (

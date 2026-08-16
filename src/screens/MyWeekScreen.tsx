@@ -343,7 +343,7 @@ export default function MyWeekScreen({
   const colors = plan ? methodColors(plan.config.method) : methodColors(currentMethod);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-white">
       <header className="px-5 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white z-10">
         <div className="flex items-start justify-between gap-3">
           <div>
