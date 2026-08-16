@@ -30,7 +30,7 @@ export default function FridgeScreen({ lang, babyName, triedFoodIds, onBack, onF
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <button onClick={onBack} className="text-green-700">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

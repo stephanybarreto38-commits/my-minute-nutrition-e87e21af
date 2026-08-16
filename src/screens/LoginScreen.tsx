@@ -79,7 +79,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
 
   if (pending) {
     return (
-      <div className="flex-1 flex flex-col overflow-y-auto items-center justify-center px-6 py-8 bg-gradient-to-b from-green-50 to-white">
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto items-center justify-center px-6 py-8 bg-gradient-to-b from-green-50 to-white">
         <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
           <div className="text-5xl mb-3">🔒</div>
           <h2 className="text-lg font-bold text-gray-900">
@@ -114,7 +114,7 @@ export default function LoginScreen({ lang, onToggleLang, onLogin }: Props) {
 
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto items-center px-6 py-8 bg-gradient-to-b from-green-50 to-white">
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto items-center px-6 py-8 bg-gradient-to-b from-green-50 to-white">
       <div className="w-full max-w-sm flex justify-end mb-4">
         <button onClick={onToggleLang} className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
           <span className={lang === 'es' ? 'text-green-600 font-semibold' : ''}>ES</span>

@@ -63,7 +63,7 @@ export default function ShoppingScreen({ lang, items, onToggle, onClear }: Props
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <h2 className="text-base font-medium text-gray-900">{tx.shopping.title}</h2>
         <button
